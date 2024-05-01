@@ -1,6 +1,6 @@
-use std::collections::HashMap;
 use regex::Regex;
 use reqwest::Client;
+use serde_json::Value;
 
 // 定义抖音请求结构体
 pub struct DouYinReq {
@@ -94,7 +94,34 @@ impl DouYinReq {
             .headers(headers);
         let response = request.send().await?;
         let body = response.text().await.unwrap();
-        println!("福袋信息是：{body:?}");
+        // println!("福袋信息是：{body:?}");
+        let map_value: Value = serde_json::from_str(&body).unwrap();
+        // println!("map value :{map_value:?}");
+        let data = map_value.get("data");
+        let lottery_info = data.expect("err get lottery_info").get("lottery_info");
+        if data.is_some() && lottery_info.is_some() {
+            println!("存在福袋信息");
+            let map_lottery = lottery_info.expect("解析异常");
+            // 奖品信息
+            let prize_info = map_lottery.get("prize_info").unwrap();
+            // 参与条件
+            let conditions = map_lottery.get("conditions").unwrap();
+            // 抽奖时间
+            let draw_time = map_lottery.get("draw_time").unwrap();
+            // 当前时间
+            let current_time = map_lottery.get("current_time").unwrap();
+            // 已参与人数
+            let candidate_num = map_lottery.get("candidate_num").unwrap();
+            // 福袋信息
+            println!("\
+            福袋信息是:
+奖品名称:{prize_info:?}
+参与条件:{conditions:?}
+剩余时间:{draw_time:?}
+已参与人数:{candidate_num:?}");
+        } else {
+            println!("不存在福袋信息:{data:?}");
+        }
         Ok(())
     }
 }
