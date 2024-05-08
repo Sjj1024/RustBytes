@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use regex::Regex;
 use reqwest::Client;
+use serde_json::Value;
 
 // 定义抖音请求结构体
 pub struct DouYinReq {
@@ -69,7 +70,9 @@ impl DouYinReq {
         let request = self.request.get("https://www.douyin.com/aweme/v1/web/general/search/single/?device_platform=webapp&aid=6383&channel=channel_pc_web&search_channel=aweme_general&enable_history=1&keyword=%E7%A6%8F%E8%A2%8B&search_source=normal_search&query_correct_type=1&is_filter_search=0&from_group_id=&offset=0&count=15&need_filter_settings=1&pc_client_type=1&version_code=190600&version_name=19.6.0&cookie_enabled=true&screen_width=1470&screen_height=956&browser_language=zh-CN&browser_platform=MacIntel&browser_name=Chrome&browser_version=124.0.0.0&browser_online=true&engine_name=Blink&engine_version=124.0.0.0&os_name=Mac+OS&os_version=10.15.7&cpu_core_num=8&device_memory=8&platform=PC&downlink=10&effective_type=4g&round_trip_time=50&webid=7347145653502019126&msToken=8hnBIwbv4-qD7Su6s1n_k-Ayiu2JKOLvRs2EVVr4W-xgEBapTrFYVcs9oaOnfCHqwn3kA1hSOifxXu3CLFEOMnAQGg3z6utvOwqdrWHtZSd4E__gt0DsHLtn_FRh_M4%3D&a_bogus=Yy8hMd8hDkIBgD6654KLfY3q63M3Yd4X0CPYMD2fWn3VSL39HMTa9exExZ7v%2FFLjLG%2FlIeSjy4hbTp9prQAGMZwf98Ux%2F2A2QDSkKl1%2Fso0j53inCyDmE0wx4hsAteqQsvH5i%2Fi8o7daSYumWxAj-kIAP62kFobyifELtWS%3D")
             .headers(headers);
         let response = request.send().await?.text().await.unwrap();
-        println!("响应结果{response:?}", );
+        let value: Value = serde_json::from_str(&response).expect("Invalid JSON");
+        // let json_lottery = serde_json::from_str(&response);
+        println!("响应结果{value:?}", );
         Ok(())
     }
 
@@ -94,7 +97,39 @@ impl DouYinReq {
             .headers(headers);
         let response = request.send().await?;
         let body = response.text().await.unwrap();
-        println!("福袋信息是：{body:?}");
+        let lottery_json: Value = serde_json::from_str(&body).unwrap();
+        println!("福袋信息是：{lottery_json:?}");
+        let data: Option<&Value> = lottery_json.get("data");
+        println!("data 字段内容是: {data:?}");
+        if data.is_some() {
+            let lottery_info = data.expect("异常").get("lottery_info");
+            println!("lottery_info 字段内容是:{lottery_info:?}");
+        }
         Ok(())
+    }
+
+
+    pub async fn test_json(&self) {
+        let json_str = r#"
+            {
+                "name": "John",
+                "age": 30,
+                "city": "New York",
+                "info": {
+                    "work": "code",
+                    "phone": 15670339888,
+                    "password": "123456"
+                }
+            }
+        "#;
+        let map_obj: Value = serde_json::from_str(json_str).expect("Invalid JSON");
+        let name = map_obj.get("name");
+        println!("name value is:{name:?}");
+        let info = map_obj.get("info");
+        let mut phone;
+        if info.is_some() {
+            phone = info.expect("").get("phone");
+            println!("phone number is: {phone:?}");
+        }
     }
 }
