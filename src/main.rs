@@ -24,6 +24,10 @@ async fn control() {
                 // run lottery main
                 douyin::live::lottery_main(live_url).await;
             }
+            3 =>{
+                println!("用户输入3，获取直播间礼物排行榜");
+                douyin::live::live_rank(live_url).await;
+            }
             _ => {
                 println!("没有匹配到输入选项");
             }

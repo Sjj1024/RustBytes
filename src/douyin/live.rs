@@ -1,5 +1,14 @@
 use crate::douyin::apis::DouYinReq;
 
+
+
+// 获取直播间信息
+pub async fn live_main(){
+    println!("获取直播间弹幕信息等")
+    //
+}
+
+
 // 中间控制层
 pub async fn lottery_main(url:String) {
     println!("获取抖音直播间福袋的主逻辑");
@@ -13,7 +22,11 @@ pub async fn lottery_main(url:String) {
 }
 
 
-// 获取直播间信息
-pub async fn live_main(){
-    println!("获取直播间弹幕信息等")
+// 直播间礼物排行榜
+pub async fn live_rank(url:String){
+    println!("直播间礼物排行榜:");
+    // get live room id
+    let mut live_req = DouYinReq::new(url);
+    live_req.get_room_id().await.unwrap();
+    live_req.get_rank_info().await.unwrap();
 }
