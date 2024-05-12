@@ -1,3 +1,5 @@
+use std::fmt::format;
+use std::ops::Div;
 use regex::Regex;
 use reqwest::Client;
 use serde_json::Value;
@@ -126,22 +128,28 @@ impl DouYinReq {
             println!("存在福袋信息");
             let map_lottery = lottery_info.expect("解析异常");
             // 奖品信息
-            let prize_info = map_lottery.get("prize_info").unwrap();
+            let prize_info = map_lottery.get("prize_info").unwrap().get("name").unwrap().as_str().unwrap();
             // 参与条件
-            let conditions = map_lottery.get("conditions").unwrap();
+            let conditions = map_lottery.get("conditions").unwrap().as_array().unwrap();
+            // 参与条件字符串
+            let mut conditions_str = String::new();
+            for c in conditions {
+                let desc = c.get("description").unwrap().as_str().unwrap();
+                conditions_str.push_str(desc);
+            }
             // 抽奖时间
-            let draw_time = map_lottery.get("draw_time").unwrap();
+            let draw_time = map_lottery.get("draw_time").unwrap().as_i64().unwrap();
             // 当前时间
-            let current_time = map_lottery.get("current_time").unwrap();
+            let current_time = map_lottery.get("current_time").unwrap().as_i64().unwrap();
+            // 剩余时间
+            let last_time = draw_time - current_time;
+            let minutes = last_time.div(60);
+            let seconds = last_time % 60;
+            let last_time_str = if minutes > 9 { format!("{minutes}:{seconds}") } else { format!("0{minutes}:{seconds}") };
             // 已参与人数
-            let candidate_num = map_lottery.get("candidate_num").unwrap();
+            let candidate_num = map_lottery.get("candidate_num").unwrap().as_i64().unwrap();
             // 福袋信息
-            println!("\
-            福袋信息是:
-奖品名称:{prize_info:?}
-参与条件:{conditions:?}
-剩余时间:{draw_time:?}
-已参与人数:{candidate_num:?}");
+            println!("福袋信息是:\n奖品名称:{prize_info:?}\n参与条件:{conditions_str:?}\n剩余时间:{last_time_str:?}\n已参与人数:{candidate_num:?}");
         } else {
             println!("不存在福袋信息:{data:?}");
         }
