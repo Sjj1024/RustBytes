@@ -1,5 +1,5 @@
 [package]
-name = "RustBytes"
+name = "rust_bytes"
 version = "0.1.0"
 edition = "2021"
 
