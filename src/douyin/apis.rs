@@ -1,4 +1,3 @@
-use std::fmt::format;
 use std::ops::Div;
 use regex::Regex;
 use reqwest::Client;

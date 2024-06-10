@@ -1,6 +1,7 @@
 mod toutiao;
 mod douyin;
 mod utils;
+mod caicai;
 
 
 async fn control() {
