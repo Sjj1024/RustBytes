@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::ops::Div;
 use regex::Regex;
 use reqwest::Client;
 use serde_json::Value;
@@ -70,9 +70,7 @@ impl DouYinReq {
         let request = self.request.get("https://www.douyin.com/aweme/v1/web/general/search/single/?device_platform=webapp&aid=6383&channel=channel_pc_web&search_channel=aweme_general&enable_history=1&keyword=%E7%A6%8F%E8%A2%8B&search_source=normal_search&query_correct_type=1&is_filter_search=0&from_group_id=&offset=0&count=15&need_filter_settings=1&pc_client_type=1&version_code=190600&version_name=19.6.0&cookie_enabled=true&screen_width=1470&screen_height=956&browser_language=zh-CN&browser_platform=MacIntel&browser_name=Chrome&browser_version=124.0.0.0&browser_online=true&engine_name=Blink&engine_version=124.0.0.0&os_name=Mac+OS&os_version=10.15.7&cpu_core_num=8&device_memory=8&platform=PC&downlink=10&effective_type=4g&round_trip_time=50&webid=7347145653502019126&msToken=8hnBIwbv4-qD7Su6s1n_k-Ayiu2JKOLvRs2EVVr4W-xgEBapTrFYVcs9oaOnfCHqwn3kA1hSOifxXu3CLFEOMnAQGg3z6utvOwqdrWHtZSd4E__gt0DsHLtn_FRh_M4%3D&a_bogus=Yy8hMd8hDkIBgD6654KLfY3q63M3Yd4X0CPYMD2fWn3VSL39HMTa9exExZ7v%2FFLjLG%2FlIeSjy4hbTp9prQAGMZwf98Ux%2F2A2QDSkKl1%2Fso0j53inCyDmE0wx4hsAteqQsvH5i%2Fi8o7daSYumWxAj-kIAP62kFobyifELtWS%3D")
             .headers(headers);
         let response = request.send().await?.text().await.unwrap();
-        let value: Value = serde_json::from_str(&response).expect("Invalid JSON");
-        // let json_lottery = serde_json::from_str(&response);
-        println!("响应结果{value:?}", );
+        println!("响应结果{response:?}", );
         Ok(())
     }
 
@@ -84,7 +82,6 @@ impl DouYinReq {
         headers.insert("cookie", "has_avx2=null; device_web_cpu_core=8; device_web_memory_size=8; live_use_vvc=%22false%22; xgplayer_user_id=32142398740; csrf_session_id=b154f2eb3608feb421dd6c9fe24bc2d4; odin_tt=a5b308e92c2f826f447b22425cb49c1faa5a13b64c07a6f7309186819371d4c74fe5dcf480e52fe2931fba91397a83a31c94e2df31a3735b839683d58bf010781b5c5f61c231ab52f5ecfbc03f80ff23; passport_csrf_token=6bc63b63e5fe245d323c824928bc812e; passport_csrf_token_default=6bc63b63e5fe245d323c824928bc812e; bd_ticket_guard_client_web_domain=2; webcast_local_quality=sd; SEARCH_RESULT_LIST_TYPE=%22single%22; ttwid=1%7CUOwlzl-VvV0COewDTk3CsEdp4EMg8CUFA-ICTdsrLQw%7C1712887757%7Cb40c2475ea6f287e8da8722ef9dfcb4b1b9d35e05158a6fc6dbc3282a4caf15a; __ac_nonce=0662a095500344b59f1a0; __ac_signature=_02B4Z6wo00f01OHJxKwAAIDDszbktR5C2nTh6cAAAF5e7JV0RQje.O9NY-t5t6vN9NKbPcnfXMkFfQLkfKLc17gPyPteEs6w5xUu7in-FxDZfmcOuSUKGOIUEeUxSuh0vbz9E.lVYSPp2boo0f; webcast_leading_last_show_time=1714030934972; webcast_leading_total_show_times=4; bd_ticket_guard_client_data=eyJiZC10aWNrZXQtZ3VhcmQtdmVyc2lvbiI6MiwiYmQtdGlja2V0LWd1YXJkLWl0ZXJhdGlvbi12ZXJzaW9uIjoxLCJiZC10aWNrZXQtZ3VhcmQtcmVlLXB1YmxpYy1rZXkiOiJCRExvdFozTlZJU3ZpQjZ3YzREeHdSdTYwaVY1eTIwUzM1UytLTllwTUs0Tmxoc3M3Z1ZjdFpYWmhiQ0ZWTzYrNEVsSGd0U25GM1BERWc4UFgvZFFodVE9IiwiYmQtdGlja2V0LWd1YXJkLXdlYi12ZXJzaW9uIjoxfQ%3D%3D; download_guide=%223%2F20240425%2F0%22; pwa2=%220%7C0%7C3%7C0%22; FORCE_LOGIN=%7B%22videoConsumedRemainSeconds%22%3A180%2C%22isForcePopClose%22%3A1%7D; home_can_add_dy_2_desktop=%221%22; __live_version__=%221.1.1.9809%22; xg_device_score=7.541386294591826; live_can_add_dy_2_desktop=%220%22; IsDouyinActive=true; msToken=LrwiNPyulLPWEKS-5jj4OvncuOKQA8y4qFfo1j-JN2Yw3-eg_j-DrE_CKTQmOz44dwG26uOxevFyITDrkPwx82M4k4XvQ8zgm3MjnQDDmtZ89Yikpkve-kRMQSuo; msToken=Qj3DmdHUf10MnlDFyLJeQaF1tLaXa93UwyL2V84tV9u8B0JAp1RuVZC41Lzw066HS7G2rqUkiQB-7DCWhkiEmQlD3KyucfKG5qPdUY3jEo39oRyafq4M2cpXm8Mv; ttwid=1%7CngabJA52sDUnYMxFKTFQmYEe2_RYNkefWVWEfuA53Mo%7C1713104743%7C34512c898d125865794d949a2477dda7493530c850da7c59a19c32a46642876c".parse()?);
         headers.insert("pragma", "no-cache".parse()?);
         headers.insert("priority", "u=1, i".parse()?);
-        headers.insert("referer", "https://live.douyin.com/520344312722?column_type=single&is_aweme_tied=0&search_id=202404251556329AEF1CC48C7C3E0C48AC&search_result_id=7361704290529971471".parse()?);
         headers.insert("sec-ch-ua", "\"Chromium\";v=\"124\", \"Google Chrome\";v=\"124\", \"Not-A.Brand\";v=\"99\"".parse()?);
         headers.insert("sec-ch-ua-mobile", "?0".parse()?);
         headers.insert("sec-ch-ua-platform", "\"macOS\"".parse()?);
@@ -94,7 +91,7 @@ impl DouYinReq {
         headers.insert("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36".parse()?);
         let request = self.request.get(format!("https://live.douyin.com/webcast/ranklist/audience/?aid=6383&app_name=douyin_web&live_id=1&device_platform=web&language=zh-CN&cookie_enabled=true&screen_width=2560&screen_height=1440&browser_language=zh-CN&browser_platform=Win32&browser_name=Chrome&browser_version=117.0.0.0&webcast_sdk_version=2450&room_id={}&rank_type=30", self.room_id)).headers(headers);
         let response = request.send().await?;
-        let json_value: Value = response.json().await?;
+        let json_value = response.text().await?;
         println!("rank json value:{json_value:?}");
         Ok(())
     }
@@ -120,14 +117,6 @@ impl DouYinReq {
             .headers(headers);
         let response = request.send().await?;
         let body = response.text().await.unwrap();
-        let lottery_json: Value = serde_json::from_str(&body).unwrap();
-        println!("福袋信息是：{lottery_json:?}");
-        let data: Option<&Value> = lottery_json.get("data");
-        println!("data 字段内容是: {data:?}");
-        if data.is_some() {
-            let lottery_info = data.expect("异常").get("lottery_info");
-            println!("lottery_info 字段内容是:{lottery_info:?}");
-        }
         // println!("福袋信息是：{body:?}");
         let map_value: Value = serde_json::from_str(&body).unwrap();
         // println!("map value :{map_value:?}");
@@ -137,50 +126,31 @@ impl DouYinReq {
             println!("存在福袋信息");
             let map_lottery = lottery_info.expect("解析异常");
             // 奖品信息
-            let prize_info = map_lottery.get("prize_info").unwrap();
+            let prize_info = map_lottery.get("prize_info").unwrap().get("name").unwrap().as_str().unwrap();
             // 参与条件
-            let conditions = map_lottery.get("conditions").unwrap();
+            let conditions = map_lottery.get("conditions").unwrap().as_array().unwrap();
+            // 参与条件字符串
+            let mut conditions_str = String::new();
+            for c in conditions {
+                let desc = c.get("description").unwrap().as_str().unwrap();
+                conditions_str.push_str(desc);
+            }
             // 抽奖时间
-            let draw_time = map_lottery.get("draw_time").unwrap();
+            let draw_time = map_lottery.get("draw_time").unwrap().as_i64().unwrap();
             // 当前时间
-            let current_time = map_lottery.get("current_time").unwrap();
+            let current_time = map_lottery.get("current_time").unwrap().as_i64().unwrap();
+            // 剩余时间
+            let last_time = draw_time - current_time;
+            let minutes = last_time.div(60);
+            let seconds = last_time % 60;
+            let last_time_str = if minutes > 9 { format!("{minutes}:{seconds}") } else { format!("0{minutes}:{seconds}") };
             // 已参与人数
-            let candidate_num = map_lottery.get("candidate_num").unwrap();
+            let candidate_num = map_lottery.get("candidate_num").unwrap().as_i64().unwrap();
             // 福袋信息
-            println!("\
-            福袋信息是:
-奖品名称:{prize_info:?}
-参与条件:{conditions:?}
-剩余时间:{draw_time:?}
-已参与人数:{candidate_num:?}");
+            println!("福袋信息是:\n奖品名称:{prize_info:?}\n参与条件:{conditions_str:?}\n剩余时间:{last_time_str:?}\n已参与人数:{candidate_num:?}");
         } else {
             println!("不存在福袋信息:{data:?}");
         }
         Ok(())
-    }
-
-
-    pub async fn test_json(&self) {
-        let json_str = r#"
-            {
-                "name": "John",
-                "age": 30,
-                "city": "New York",
-                "info": {
-                    "work": "code",
-                    "phone": 15670339888,
-                    "password": "123456"
-                }
-            }
-        "#;
-        let map_obj: Value = serde_json::from_str(json_str).expect("Invalid JSON");
-        let name = map_obj.get("name");
-        println!("name value is:{name:?}");
-        let info = map_obj.get("info");
-        let mut phone;
-        if info.is_some() {
-            phone = info.expect("").get("phone");
-            println!("phone number is: {phone:?}");
-        }
     }
 }

@@ -17,14 +17,17 @@ async fn control() {
         let live_url = utils::common::input_url();
         match input {
             1 => {
+                // 直播间弹幕
                 println!("用户输入的是1");
             }
             2 => {
+                // 福袋信息
                 println!("用户输入的是2");
                 // run lottery main
                 douyin::live::lottery_main(live_url).await;
             }
             3 =>{
+                // 礼物排行榜
                 println!("用户输入3，获取直播间礼物排行榜");
                 douyin::live::live_rank(live_url).await;
             }
