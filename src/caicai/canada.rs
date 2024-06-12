@@ -1,5 +1,5 @@
 use std::io::{self, Write};
-use std::ops::Sub;
+use std::ops::{Add, Sub};
 use std::thread;
 use std::time::Duration;
 use reqwest::Client;
@@ -37,10 +37,13 @@ impl Canada48 {
             tokio::time::sleep(Duration::from_secs(10)).await;
             // 获取下次开奖时间
             let next_second = self.get_next().await.unwrap();
-            // 延迟多少秒
+            // 控制台刷新还剩多少秒
             self.flush_second(next_second.clone());
             // 等待一段时间，模拟耗时操作
             tokio::time::sleep(next_second).await;
+            println!("开始获取最新结果数据......");
+            // 要多等待几秒钟才可以向服务器发送最新数据，否则获取不到最新数据
+            tokio::time::sleep(Duration::from_millis(5000)).await;
         }
     }
 
@@ -50,17 +53,18 @@ impl Canada48 {
         let mut inner_duration = duration.as_secs();
         thread::spawn(move || {
             loop {
+                // 等待一段时间，模拟耗时操作
+                thread::sleep(Duration::from_secs(1));
                 inner_duration -= 1;
-                if inner_duration <= 0 {
-                    return;
-                }
                 let minutes = inner_duration / 60;
                 let seconds = inner_duration % 60;
                 let format_second = if seconds < 10 { format!("0{seconds:?}") } else { format!("{seconds:?}") };
                 print!("\r距离下次开奖还剩: {minutes:?}分{format_second}秒");
                 io::stdout().flush().unwrap();
-                // 等待一段时间，模拟耗时操作
-                thread::sleep(Duration::from_secs(1));
+                if inner_duration <= 0 {
+                    println!();
+                    return;
+                }
             }
         });
     }
@@ -221,7 +225,7 @@ impl Canada48 {
         println!("预测的四个结果是: {left_color:?} 右侧: {right_color:?}");
         // 判断左边颜色
         if left_color == vec!["蓝", "蓝", "蓝", "蓝"] {
-            println!("左侧四个蓝");
+            println!("左侧预测: 四个蓝");
             self.wx_pusher.push_summary(String::from("左侧四个蓝"), String::from("预测结果: 左侧四个蓝")).await?;
         } else if left_color == vec!["红", "红", "红", "红"] {
             println!("左侧四个红");
