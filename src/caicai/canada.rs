@@ -59,6 +59,11 @@ impl Canada48 {
                 let minutes = inner_duration / 60;
                 let seconds = inner_duration % 60;
                 let format_second = if seconds < 10 { format!("0{seconds:?}") } else { format!("{seconds:?}") };
+                // 如果分钟超过30，就说明异常，发送微信通知
+                if minutes > 30 {
+                    self.wx_pusher.push_summary(String::from("下次开奖超30分钟"), String::from("下次开奖超30分钟，可能是发生异常了")).unwrap();
+                    return;
+                }
                 print!("\r距离下次开奖还剩: {minutes:?}分{format_second}秒");
                 io::stdout().flush().unwrap();
                 if inner_duration - 1 <= 0 {
