@@ -26,7 +26,7 @@ impl Canada48 {
 
     // 主流程控制
     pub async fn controller(&self) {
-        println!("主流程控制");
+        // println!("主流程控制");
         // loop循环
         loop {
             // 获取开奖结果和预测结果数据
@@ -41,7 +41,7 @@ impl Canada48 {
             self.flush_second(next_second.clone());
             // 等待一段时间，模拟耗时操作
             tokio::time::sleep(next_second).await;
-            println!("开始获取最新结果数据......");
+            println!("\n开始获取最新结果数据......");
             // 要多等待几秒钟才可以向服务器发送最新数据，否则获取不到最新数据
             tokio::time::sleep(Duration::from_millis(6000)).await;
         }
@@ -61,8 +61,7 @@ impl Canada48 {
                 let format_second = if seconds < 10 { format!("0{seconds:?}") } else { format!("{seconds:?}") };
                 print!("\r距离下次开奖还剩: {minutes:?}分{format_second}秒");
                 io::stdout().flush().unwrap();
-                if inner_duration <= 0 {
-                    println!();
+                if inner_duration - 1 <= 0 {
                     return;
                 }
             }
@@ -200,7 +199,6 @@ impl Canada48 {
 
     // 处理预测结果是否发送微信通知
     pub async fn handle_calculate(&self, result: &Value) -> Result<(), Box<dyn std::error::Error>> {
-        println!("获取预测结果......");
         let res_data = result.get("data").unwrap().as_array().unwrap();
         let four_data = &res_data[1..5];
         // println!("获取最新的四条预测数据是: {four_data:?}");

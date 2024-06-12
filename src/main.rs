@@ -13,7 +13,8 @@ async fn control() {
     if args.len() > 1 {
         println!("有命令行参数: {args:?}");
     } else {
-        let input = utils::common::select_action();
+        // let input = utils::common::select_action();
+        let input = 8;
         match input {
             1 => {
                 // 直播间弹幕
@@ -60,7 +61,7 @@ async fn control() {
             }
             8 => {
                 // 测试消息推送
-                println!("用户输入8，加拿大48主流程控制");
+                println!("加拿大48主流程控制");
                 let canada = caicai::canada::Canada48::new();
                 canada.controller().await;
             }
