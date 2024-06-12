@@ -29,17 +29,18 @@ impl Canada48 {
         println!("主流程控制");
         // loop循环
         loop {
+            // 获取开奖结果和预测结果数据
+            self.get_result().await.unwrap();
+            self.get_calculate().await.unwrap();
+            // 再等待5秒后开始循环
+            println!("开始获取下次开奖时间......");
+            tokio::time::sleep(Duration::from_secs(10)).await;
             // 获取下次开奖时间
             let next_second = self.get_next().await.unwrap();
             // 延迟多少秒
             self.flush_second(next_second.clone());
             // 等待一段时间，模拟耗时操作
             tokio::time::sleep(next_second).await;
-            // 获取开奖结果和预测结果数据
-            self.get_result().await.unwrap();
-            self.get_calculate().await.unwrap();
-            // 再等待5秒后开始循环
-            tokio::time::sleep(Duration::from_secs(5)).await;
         }
     }
 
@@ -67,12 +68,12 @@ impl Canada48 {
 
     // 获取下次开奖时间
     pub async fn get_next(&self) -> Result<Duration, Box<dyn std::error::Error>> {
-        println!("获取下次开奖时间");
+        // println!("获取下次开奖时间......");
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert("Accept", "application/json, text/javascript, */*; q=0.01".parse()?);
         headers.insert("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8".parse()?);
         headers.insert("Connection", "keep-alive".parse()?);
-        headers.insert("Cookie", "_pk_id.1.573e=1f28b480ae3ce652.1718096527.; cookieconsent_status=dismiss; _pk_ref.1.573e=%5B%22%22%2C%22%22%2C1718104584%2C%22https%3A%2F%2Fmp.csdn.net%2Fmp_blog%2Fcreation%2Feditor%2F139578386%22%5D; _pk_ses.1.573e=1".parse()?);
+        // headers.insert("Cookie", "_pk_id.1.573e=1f28b480ae3ce652.1718096527.; cookieconsent_status=dismiss; _pk_ref.1.573e=%5B%22%22%2C%22%22%2C1718104584%2C%22https%3A%2F%2Fmp.csdn.net%2Fmp_blog%2Fcreation%2Feditor%2F139578386%22%5D; _pk_ses.1.573e=1".parse()?);
         headers.insert("Referer", "http://23.225.7.133:828/".parse()?);
         headers.insert("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36".parse()?);
         headers.insert("X-Requested-With", "XMLHttpRequest".parse()?);
@@ -87,13 +88,13 @@ impl Canada48 {
         let server_time = map_value.get("serverTime").unwrap().as_u64().unwrap();
         // 还剩多少毫秒
         let duration = Duration::from_millis(open_time - server_time);
-        println!("下次开奖时间是: {open_time_s:?}");
+        println!("下次开奖时间是: {open_time_s}");
         return Ok(duration);
     }
 
     // 获取开奖结果
     pub async fn get_result(&self) -> Result<(), Box<dyn std::error::Error>> {
-        println!("获取开奖结果");
+        println!("获取开奖结果......");
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert("Accept", "application/json, text/javascript, */*; q=0.01".parse()?);
         headers.insert("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8".parse()?);
@@ -101,7 +102,7 @@ impl Canada48 {
         headers.insert("Referer", "http://23.225.7.133:828/".parse()?);
         headers.insert("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36".parse()?);
         headers.insert("X-Requested-With", "XMLHttpRequest".parse()?);
-        let request = self.request.get(format!("{}/Mobile/Indexs/myOpens/type/1/pz/{}/page/1", self.base_url, self.page_size))
+        let request = self.request.get(format!("{}/Mobile/Indexs/myOpens/type/2/pz/{}/page/1", self.base_url, self.page_size))
             .headers(headers);
         let response = request.send().await?;
         let body = response.text().await?;
@@ -113,7 +114,7 @@ impl Canada48 {
 
     // 获取预测结果
     pub async fn get_calculate(&self) -> Result<(), Box<dyn std::error::Error>> {
-        println!("获取预测结果");
+        println!("获取预测结果......");
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert("Accept", "application/json, text/javascript, */*; q=0.01".parse()?);
         headers.insert("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8".parse()?);
@@ -133,10 +134,10 @@ impl Canada48 {
 
     // 处理结果数据是否发送微信通知
     pub async fn handle_result(&self, result: &Value) -> Result<(), Box<dyn std::error::Error>> {
-        println!("处理开奖结果");
         let res_data = result.get("data").unwrap().as_array().unwrap();
+        // println!("处理开奖结果: {res_data:?}");
         let last_four = &res_data[0..4];
-        println!("获取最新的四条结果数据是: {last_four:?}");
+        // println!("获取最新的四条结果数据是: {last_four:?}");
         let mut open_nums: Vec<&str> = vec![];
         let mut single_dou: Vec<&str> = vec![];
         for data in last_four.iter() {
@@ -156,7 +157,7 @@ impl Canada48 {
                 single_dou.push("单");
             }
         }
-        println!("开奖的四个结果是: {open_nums:?}");
+        println!("开奖的四个结果大小是: {open_nums:?} 单双结果是：{single_dou:?}");
         // 判断大小
         if open_nums == vec!["大", "大", "大", "大"] {
             println!("四个大");
@@ -171,7 +172,7 @@ impl Canada48 {
             println!("大小大小");
             self.wx_pusher.push_summary(String::from("大小大小"), String::from("开奖结果: 大小大小")).await?;
         } else {
-            println!("不用关心的结果");
+            println!("不用关心的大小结果");
         }
         // 判断单双
         if open_nums == vec!["单", "单", "单", "单"] {
@@ -187,7 +188,7 @@ impl Canada48 {
             println!("双单双单");
             self.wx_pusher.push_summary(String::from("双单双单"), String::from("开奖结果: 双单双单")).await?;
         } else {
-            println!("不用关心的结果");
+            println!("不用关心的单双结果");
         }
         Ok(())
     }
@@ -195,10 +196,10 @@ impl Canada48 {
 
     // 处理预测结果是否发送微信通知
     pub async fn handle_calculate(&self, result: &Value) -> Result<(), Box<dyn std::error::Error>> {
-        println!("处理预测结果");
+        println!("获取预测结果......");
         let res_data = result.get("data").unwrap().as_array().unwrap();
         let four_data = &res_data[1..5];
-        println!("获取最新的四条预测数据是: {four_data:?}");
+        // println!("获取最新的四条预测数据是: {four_data:?}");
         let mut left_color: Vec<&str> = vec![];
         let mut right_color: Vec<&str> = vec![];
         for data in four_data.iter() {
@@ -248,7 +249,7 @@ impl Canada48 {
             println!("右侧红蓝红蓝");
             self.wx_pusher.push_summary(String::from("右侧红蓝红蓝"), String::from("预测结果: 右侧红蓝红蓝")).await?;
         } else {
-            println!("不用关心的结果");
+            println!("右侧不用关心的结果");
         }
         Ok(())
     }
