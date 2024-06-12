@@ -1,2 +1,2 @@
 pub mod common;
-mod message;
+pub mod message;
