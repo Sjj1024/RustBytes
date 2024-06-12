@@ -179,16 +179,16 @@ impl Canada48 {
             println!("不用关心的大小结果");
         }
         // 判断单双
-        if open_nums == vec!["单", "单", "单", "单"] {
+        if single_dou == vec!["单", "单", "单", "单"] {
             println!("四个单");
             self.wx_pusher.push_summary(String::from("四个单"), String::from("开奖结果: 四个单")).await?;
-        } else if open_nums == vec!["双", "双", "双", "双"] {
+        } else if single_dou == vec!["双", "双", "双", "双"] {
             println!("四个双");
             self.wx_pusher.push_summary(String::from("四个双"), String::from("开奖结果: 四个双")).await?;
-        } else if open_nums == vec!["单", "双", "单", "双"] {
+        } else if single_dou == vec!["单", "双", "单", "双"] {
             println!("单双单双");
             self.wx_pusher.push_summary(String::from("单双单双"), String::from("开奖结果: 单双单双")).await?;
-        } else if open_nums == vec!["双", "单", "双", "单"] {
+        } else if single_dou == vec!["双", "单", "双", "单"] {
             println!("双单双单");
             self.wx_pusher.push_summary(String::from("双单双单"), String::from("开奖结果: 双单双单")).await?;
         } else {
