@@ -43,7 +43,7 @@ impl Canada48 {
             tokio::time::sleep(next_second).await;
             println!("开始获取最新结果数据......");
             // 要多等待几秒钟才可以向服务器发送最新数据，否则获取不到最新数据
-            tokio::time::sleep(Duration::from_millis(5000)).await;
+            tokio::time::sleep(Duration::from_millis(6000)).await;
         }
     }
 
