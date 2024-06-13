@@ -1,5 +1,5 @@
 use std::io::{self, Write};
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use reqwest::Client;
 use serde_json::Value;
 use crate::utils::message::WxPusher;
@@ -34,7 +34,7 @@ impl Canada48 {
             println!("开始获取下次开奖时间......");
             // 获取下次开奖时间，如果超过30分钟，等待10秒钟重新获取
             let mut next_second = Duration::from_millis(1);
-            for t in 1..3 {
+            for _ in 1..10 {
                 tokio::time::sleep(Duration::from_secs(10)).await;
                 next_second = self.get_next().await.unwrap();
                 let inner_duration = next_second.as_secs();
@@ -53,7 +53,7 @@ impl Canada48 {
             // tokio::time::sleep(next_second).await;
             println!("\n开始获取最新结果数据......");
             // 要多等待几秒钟才可以向服务器发送最新数据，否则获取不到最新数据
-            tokio::time::sleep(Duration::from_millis(6000)).await;
+            tokio::time::sleep(Duration::from_millis(7000)).await;
         }
     }
 
@@ -104,11 +104,22 @@ impl Canada48 {
         let open_time_s = map_value.get("openTime_s").unwrap().as_str().unwrap();
         let open_time = map_value.get("openTime").unwrap().as_u64().unwrap();
         let server_time = map_value.get("serverTime").unwrap().as_u64().unwrap();
+        // 本地当前时间戳
+        let local_time = SystemTime::now();
+        let since_epoch = local_time.duration_since(UNIX_EPOCH).unwrap().as_millis();
+        // 如果服务器时间<开奖时间，就用服务器时间，否则使用本地时间
+        let since_millis: u64;
+        if server_time < open_time {
+            since_millis = open_time - server_time;
+        } else {
+            since_millis = open_time.wrapping_sub(since_epoch as u64);
+        }
         // 还剩多少毫秒
-        let duration = Duration::from_millis(open_time - server_time);
+        let duration = Duration::from_millis(since_millis);
         println!("下次开奖时间是: {open_time_s}");
         println!("开奖时间戳: {open_time}");
-        println!("服务器时间戳: {server_time}");
+        println!("服务器时间: {server_time}");
+        println!("本地器时间: {since_epoch}");
         println!("开奖剩余时间: {}秒", duration.as_secs());
         return Ok(duration);
     }
