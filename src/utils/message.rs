@@ -36,7 +36,7 @@ impl WxPusher {
             .json(&json);
         let response = request.send().await?;
         let body = response.text().await?;
-        println!("{}", body);
+        println!("send wx: {}", body);
         Ok(())
     }
 
@@ -58,7 +58,7 @@ impl WxPusher {
             .json(&json);
         let response = request.send().await?;
         let body = response.text().await?;
-        println!("{}", body);
+        println!("send wx: {}", body);
         Ok(())
     }
 
@@ -80,7 +80,7 @@ impl WxPusher {
             .json(&json);
         let response = request.send().await?;
         let body = response.text().await?;
-        println!("{}", body);
+        println!("send wx: {}", body);
         Ok(())
     }
 }
