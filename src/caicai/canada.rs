@@ -1,6 +1,4 @@
 use std::io::{self, Write};
-use std::ops::{Add, Sub};
-use std::thread;
 use std::time::Duration;
 use reqwest::Client;
 use serde_json::Value;
@@ -34,13 +32,13 @@ impl Canada48 {
             self.get_calculate().await.unwrap();
             // 再等待5秒后开始循环
             println!("开始获取下次开奖时间......");
-            tokio::time::sleep(Duration::from_secs(10)).await;
+            tokio::time::sleep(Duration::from_secs(5)).await;
             // 获取下次开奖时间
             let next_second = self.get_next().await.unwrap();
             // 控制台刷新还剩多少秒
-            self.flush_second(next_second.clone());
+            self.flush_second(&next_second).await.unwrap();
             // 等待一段时间，模拟耗时操作
-            tokio::time::sleep(next_second).await;
+            // tokio::time::sleep(next_second).await;
             println!("\n开始获取最新结果数据......");
             // 要多等待几秒钟才可以向服务器发送最新数据，否则获取不到最新数据
             tokio::time::sleep(Duration::from_millis(6000)).await;
@@ -48,31 +46,29 @@ impl Canada48 {
     }
 
     // 控制台倒计时
-    pub fn flush_second(&self, duration: Duration) {
+    pub async fn flush_second(&self, duration: &Duration) -> Result<(), Box<dyn std::error::Error>> {
         // 输出相差的分钟和秒数
         let mut inner_duration = duration.as_secs();
-        thread::spawn(move || {
-            loop {
-                // 等待一段时间，模拟耗时操作
-                thread::sleep(Duration::from_secs(1));
-                inner_duration -= 1;
-                let minutes = inner_duration / 60;
-                let seconds = inner_duration % 60;
-                let format_second = if seconds < 10 { format!("0{seconds:?}") } else { format!("{seconds:?}") };
-                // 如果分钟超过30，就说明异常，发送微信通知
-                if minutes > 30 {
-                    // self.wx_pusher.push_summary(String::from("下次开奖超30分钟"), String::from("下次开奖超30分钟，可能是发生异常了"));
-                    let weixin = WxPusher::new(String::from("AT_UyFVD4Vhyl7BFUmnicHKrtBI5oz0mY4X"));
-                    weixin.push_summary(String::from("下次开奖超30分钟"), String::from("下次开奖超30分钟，可能是发生异常了"));
-                    return;
-                }
-                print!("\r距离下次开奖还剩: {minutes:?}分{format_second}秒");
-                io::stdout().flush().unwrap();
-                if inner_duration - 1 <= 0 {
-                    return;
-                }
+        // 如果开奖时间超过30分钟，发送消息报错
+        let minutes_last = inner_duration / 60;
+        // 如果分钟超过30，就说明异常，发送微信通知
+        if minutes_last > 30 {
+            println!("下次开奖超30分钟，可能是发生异常了");
+            self.wx_pusher.push_summary(String::from("下次开奖超30分钟"), String::from("下次开奖超30分钟，可能是发生异常了")).await.unwrap();
+        }
+        loop {
+            // 等待一段时间，模拟耗时操作
+            tokio::time::sleep(Duration::from_secs(1)).await;
+            inner_duration -= 1;
+            let minutes = inner_duration / 60;
+            let seconds = inner_duration % 60;
+            let format_second = if seconds < 10 { format!("0{seconds:?}") } else { format!("{seconds:?}") };
+            print!("\r距离下次开奖还剩: {minutes:?}分{format_second}秒");
+            io::stdout().flush().unwrap();
+            if inner_duration - 1 <= 0 {
+                return Ok(());
             }
-        });
+        }
     }
 
 
