@@ -126,10 +126,11 @@ impl Canada48 {
         let request = self.request.get(format!("{}/Mobile/Indexs/myOpens/type/2/pz/{}/page/1", self.base_url, self.page_size))
             .headers(headers);
         let response = request.send().await?;
-        let body = response.text().await?;
-        // 将文本字符串转为结构体
-        let map_value: Value = serde_json::from_str(&body).unwrap();
-        self.handle_result(&map_value).await?;
+        let body = response.text().await.unwrap();
+        // 将文本字符串转为结构体: 会被防火墙截胡,导致返回的防诈骗广告
+        // let map_value: Value = serde_json::from_str(&body).unwrap();
+        // self.handle_result(&map_value).await?;
+        println!("response----------{body}");
         Ok(())
     }
 
