@@ -32,9 +32,21 @@ impl Canada48 {
             self.get_calculate().await.unwrap();
             // 再等待5秒后开始循环
             println!("开始获取下次开奖时间......");
-            tokio::time::sleep(Duration::from_secs(5)).await;
-            // 获取下次开奖时间
-            let next_second = self.get_next().await.unwrap();
+            // 获取下次开奖时间，如果超过30分钟，等待10秒钟重新获取
+            let mut next_second = Duration::from_millis(1);
+            for t in 1..3 {
+                tokio::time::sleep(Duration::from_secs(10)).await;
+                next_second = self.get_next().await.unwrap();
+                let inner_duration = next_second.as_secs();
+                // 如果开奖时间超过30分钟，发送消息报错
+                let minutes_last = inner_duration / 60;
+                if minutes_last > 30 {
+                    continue;
+                } else {
+                    break;
+                }
+            }
+            // let next_second = self.get_next().await.unwrap();
             // 控制台刷新还剩多少秒
             self.flush_second(&next_second).await.unwrap();
             // 等待一段时间，模拟耗时操作
@@ -95,6 +107,9 @@ impl Canada48 {
         // 还剩多少毫秒
         let duration = Duration::from_millis(open_time - server_time);
         println!("下次开奖时间是: {open_time_s}");
+        println!("开奖时间戳: {open_time}");
+        println!("服务器时间戳: {server_time}");
+        println!("开奖剩余时间: {}秒", duration.as_secs());
         return Ok(duration);
     }
 
