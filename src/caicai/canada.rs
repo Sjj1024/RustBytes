@@ -99,9 +99,7 @@ impl Canada48 {
             .headers(headers);
         let response = request.send().await?;
         let body = response.text().await?;
-        if body.contains("国家反诈中心") {
-            panic!("需要开代理才可以访问网站！");
-        } else {
+        if body.contains("openTime") {
             let map_value: Value = serde_json::from_str(&body).unwrap();
             // 获取下次开奖时间
             let open_time_s = map_value.get("openTime_s").unwrap().as_str().unwrap();
@@ -125,6 +123,9 @@ impl Canada48 {
             println!("本地器时间: {since_epoch}");
             println!("开奖剩余时间: {}秒", duration.as_secs());
             return Ok(duration);
+        } else {
+            println!("返回json数据异常:{body}");
+            panic!("需要开代理才可以访问网站！");
         }
     }
 
@@ -143,13 +144,13 @@ impl Canada48 {
         let response = request.send().await?;
         let body = response.text().await.unwrap();
         // 将文本字符串转为结构体: 会被防火墙截胡,导致返回的防诈骗广告
-        if body.contains("国家反诈中心") {
-            panic!("需要开代理才可以访问网站！");
-        } else {
+        if body.contains("total") {
             let map_value: Value = serde_json::from_str(&body).unwrap();
             self.handle_result(&map_value).await?;
-            println!("response----------{body}");
             Ok(())
+        } else {
+            println!("返回json数据异常:{body}");
+            panic!("需要开代理才可以访问网站！");
         }
     }
 
@@ -168,12 +169,13 @@ impl Canada48 {
         let response = request.send().await?;
         let body = response.text().await?;
         // 将文本字符串转为结构体
-        if body.contains("国家反诈中心") {
-            panic!("需要开代理才可以访问网站！");
-        } else {
+        if body.contains("total") {
             let map_value: Value = serde_json::from_str(&body).unwrap();
             self.handle_calculate(&map_value).await?;
             Ok(())
+        } else {
+            println!("返回json数据异常:{body}");
+            panic!("需要开代理才可以访问网站！");
         }
     }
 
