@@ -1,4 +1,4 @@
-name: Build and Upload Binaries
+name: Build Windows Executable
 
 on:
   push:
@@ -10,21 +10,18 @@ on:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        platform: [ubuntu-latest, macos-latest, windows-latest]
-
-    runs-on: ${{ matrix.platform }}
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Rust
+      - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
+          target: x86_64-pc-windows-msvc
 
       - name: Cache Cargo registry
         uses: actions/cache@v3
@@ -45,10 +42,8 @@ jobs:
       - name: Build
         run: cargo build --release
 
-      - name: Upload binary
+      - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ runner.os }}-binary
-          path: |
-            target/release/*.exe
-            target/release/*-binary
+          name: windows-executable
+          path: target/release/*.exe
