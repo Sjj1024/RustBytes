@@ -99,29 +99,33 @@ impl Canada48 {
             .headers(headers);
         let response = request.send().await?;
         let body = response.text().await?;
-        let map_value: Value = serde_json::from_str(&body).unwrap();
-        // 获取下次开奖时间
-        let open_time_s = map_value.get("openTime_s").unwrap().as_str().unwrap();
-        let open_time = map_value.get("openTime").unwrap().as_u64().unwrap();
-        let server_time = map_value.get("serverTime").unwrap().as_u64().unwrap();
-        // 本地当前时间戳
-        let local_time = SystemTime::now();
-        let since_epoch = local_time.duration_since(UNIX_EPOCH).unwrap().as_millis();
-        // 如果服务器时间<开奖时间，就用服务器时间，否则使用本地时间
-        let since_millis: u64;
-        if server_time < open_time {
-            since_millis = open_time - server_time;
+        if body.contains("国家反诈中心") {
+            panic!("需要开代理才可以访问网站！");
         } else {
-            since_millis = open_time.wrapping_sub(since_epoch as u64);
+            let map_value: Value = serde_json::from_str(&body).unwrap();
+            // 获取下次开奖时间
+            let open_time_s = map_value.get("openTime_s").unwrap().as_str().unwrap();
+            let open_time = map_value.get("openTime").unwrap().as_u64().unwrap();
+            let server_time = map_value.get("serverTime").unwrap().as_u64().unwrap();
+            // 本地当前时间戳
+            let local_time = SystemTime::now();
+            let since_epoch = local_time.duration_since(UNIX_EPOCH).unwrap().as_millis();
+            // 如果服务器时间<开奖时间，就用服务器时间，否则使用本地时间
+            let since_millis: u64;
+            if server_time < open_time {
+                since_millis = open_time - server_time;
+            } else {
+                since_millis = open_time.wrapping_sub(since_epoch as u64);
+            }
+            // 还剩多少毫秒
+            let duration = Duration::from_millis(since_millis);
+            println!("下次开奖时间是: {open_time_s}");
+            println!("开奖时间戳: {open_time}");
+            println!("服务器时间: {server_time}");
+            println!("本地器时间: {since_epoch}");
+            println!("开奖剩余时间: {}秒", duration.as_secs());
+            return Ok(duration);
         }
-        // 还剩多少毫秒
-        let duration = Duration::from_millis(since_millis);
-        println!("下次开奖时间是: {open_time_s}");
-        println!("开奖时间戳: {open_time}");
-        println!("服务器时间: {server_time}");
-        println!("本地器时间: {since_epoch}");
-        println!("开奖剩余时间: {}秒", duration.as_secs());
-        return Ok(duration);
     }
 
     // 获取开奖结果
@@ -139,10 +143,14 @@ impl Canada48 {
         let response = request.send().await?;
         let body = response.text().await.unwrap();
         // 将文本字符串转为结构体: 会被防火墙截胡,导致返回的防诈骗广告
-        // let map_value: Value = serde_json::from_str(&body).unwrap();
-        // self.handle_result(&map_value).await?;
-        println!("response----------{body}");
-        Ok(())
+        if body.contains("国家反诈中心") {
+            panic!("需要开代理才可以访问网站！");
+        } else {
+            let map_value: Value = serde_json::from_str(&body).unwrap();
+            self.handle_result(&map_value).await?;
+            println!("response----------{body}");
+            Ok(())
+        }
     }
 
     // 获取预测结果
@@ -160,9 +168,13 @@ impl Canada48 {
         let response = request.send().await?;
         let body = response.text().await?;
         // 将文本字符串转为结构体
-        let map_value: Value = serde_json::from_str(&body).unwrap();
-        self.handle_calculate(&map_value).await?;
-        Ok(())
+        if body.contains("国家反诈中心") {
+            panic!("需要开代理才可以访问网站！");
+        } else {
+            let map_value: Value = serde_json::from_str(&body).unwrap();
+            self.handle_calculate(&map_value).await?;
+            Ok(())
+        }
     }
 
     // 处理结果数据是否发送微信通知
