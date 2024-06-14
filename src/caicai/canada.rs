@@ -100,7 +100,7 @@ impl Canada48 {
         // 如果分钟超过30，就说明异常，发送微信通知
         if minutes_last > 30 {
             println!("下次开奖超30分钟，可能是发生异常了");
-            self.wx_pusher.push_summary(String::from("下次开奖超30分钟"), String::from("下次开奖超30分钟，可能是发生异常了")).await.unwrap();
+            self.wx_pusher.push_summary(&String::from("下次开奖超30分钟"), String::from("下次开奖超30分钟，可能是发生异常了")).await.unwrap();
         }
         loop {
             // 等待一段时间，模拟耗时操作
@@ -185,7 +185,9 @@ impl Canada48 {
         // 将文本字符串转为结构体: 会被防火墙截胡,导致返回的防诈骗广告
         if body.contains("total") {
             let map_value: Value = serde_json::from_str(&body).unwrap();
-            self.handle_result(&map_value).await?;
+            // 需要处理四把和五把逻辑：
+            self.handle_res_four(&map_value).await?;
+            self.handle_res_five(&map_value).await?;
             Ok(())
         } else {
             println!("返回json数据异常:{body}");
@@ -210,7 +212,9 @@ impl Canada48 {
         // 将文本字符串转为结构体
         if body.contains("total") {
             let map_value: Value = serde_json::from_str(&body).unwrap();
-            self.handle_calculate(&map_value).await?;
+            // 处理最新4条和5条数据
+            self.handle_cal_four(&map_value).await?;
+            self.handle_cal_five(&map_value).await?;
             Ok(())
         } else {
             println!("返回json数据异常:{body}");
@@ -218,8 +222,8 @@ impl Canada48 {
         }
     }
 
-    // 处理结果数据是否发送微信通知
-    pub async fn handle_result(&self, result: &Value) -> Result<(), Box<dyn std::error::Error>> {
+    // 处理4结果数据是否发送微信通知
+    pub async fn handle_res_four(&self, result: &Value) -> Result<(), Box<dyn std::error::Error>> {
         let res_data = result.get("data").unwrap().as_array().unwrap();
         // println!("处理开奖结果: {res_data:?}");
         let last_four = &res_data[0..4];
@@ -246,33 +250,25 @@ impl Canada48 {
         println!("开奖的四个结果大小是: {open_nums:?} 单双结果是：{single_dou:?}");
         // 判断大小
         if open_nums == vec!["大", "大", "大", "大"] {
-            println!("四个大");
-            self.wx_pusher.push_summary(String::from("四个大"), String::from("开奖结果: 四个大")).await?;
+            let send_msg = String::from("大大大大");
+            println!("{}", send_msg);
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("开奖结果: {}", send_msg))).await?;
         } else if open_nums == vec!["小", "小", "小", "小"] {
-            println!("四个小");
-            self.wx_pusher.push_summary(String::from("四个小"), String::from("开奖结果: 四个小")).await?;
-        } else if open_nums == vec!["小", "大", "小", "大"] {
-            println!("小大小大");
-            self.wx_pusher.push_summary(String::from("小大小大"), String::from("开奖结果: 小大小大")).await?;
-        } else if open_nums == vec!["大", "小", "大", "小"] {
-            println!("大小大小");
-            self.wx_pusher.push_summary(String::from("大小大小"), String::from("开奖结果: 大小大小")).await?;
+            let send_msg = String::from("小小小小");
+            println!("{}", send_msg);
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("开奖结果: {}", send_msg))).await?;
         } else {
             println!("不用关心的大小结果");
         }
         // 判断单双
         if single_dou == vec!["单", "单", "单", "单"] {
-            println!("四个单");
-            self.wx_pusher.push_summary(String::from("四个单"), String::from("开奖结果: 四个单")).await?;
+            let send_msg = String::from("单单单单");
+            println!("{}", send_msg);
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("开奖结果: {}", send_msg))).await?;
         } else if single_dou == vec!["双", "双", "双", "双"] {
-            println!("四个双");
-            self.wx_pusher.push_summary(String::from("四个双"), String::from("开奖结果: 四个双")).await?;
-        } else if single_dou == vec!["单", "双", "单", "双"] {
-            println!("单双单双");
-            self.wx_pusher.push_summary(String::from("单双单双"), String::from("开奖结果: 单双单双")).await?;
-        } else if single_dou == vec!["双", "单", "双", "单"] {
-            println!("双单双单");
-            self.wx_pusher.push_summary(String::from("双单双单"), String::from("开奖结果: 双单双单")).await?;
+            let send_msg = String::from("双双双双");
+            println!("{}", send_msg);
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("开奖结果: {}", send_msg))).await?;
         } else {
             println!("不用关心的单双结果");
         }
@@ -280,8 +276,62 @@ impl Canada48 {
     }
 
 
-    // 处理预测结果是否发送微信通知
-    pub async fn handle_calculate(&self, result: &Value) -> Result<(), Box<dyn std::error::Error>> {
+    // 处理5条数据是否发送微信通知
+    pub async fn handle_res_five(&self, result: &Value) -> Result<(), Box<dyn std::error::Error>> {
+        let res_data = result.get("data").unwrap().as_array().unwrap();
+        // println!("处理开奖结果: {res_data:?}");
+        let last_four = &res_data[0..5];
+        // println!("获取最新的四条结果数据是: {last_four:?}");
+        let mut open_nums: Vec<&str> = vec![];
+        let mut single_dou: Vec<&str> = vec![];
+        for data in last_four.iter() {
+            let num = data.get("openNum").unwrap().as_i64().unwrap();
+            // 判断大小
+            if num <= 13 {
+                open_nums.push("小");
+            } else {
+                open_nums.push("大");
+            }
+            // 判断单双
+            if num % 2 == 0 {
+                println!("双数：{num:?}");
+                single_dou.push("双");
+            } else {
+                println!("单数：{num:?}");
+                single_dou.push("单");
+            }
+        }
+        println!("开奖的五个结果大小是: {open_nums:?} 单双结果是：{single_dou:?}");
+        // 判断大小
+        if open_nums == vec!["小", "大", "小", "大", "小"] {
+            let send_msg = String::from("小大小大小");
+            println!("{}", send_msg);
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("开奖结果: {}", send_msg))).await?;
+        } else if open_nums == vec!["大", "小", "大", "小", "大"] {
+            let send_msg = String::from("大小大小大");
+            println!("{}", send_msg);
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("开奖结果: {}", send_msg))).await?;
+        } else {
+            println!("不用关心的大小结果");
+        }
+        // 判断单双
+        if single_dou == vec!["单", "双", "单", "双", "单"] {
+            let send_msg = String::from("单双单双单");
+            println!("{}", send_msg);
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("开奖结果: {}", send_msg))).await?;
+        } else if single_dou == vec!["双", "单", "双", "单", "双"] {
+            let send_msg = String::from("双单双单双");
+            println!("{}", send_msg);
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("开奖结果: {}", send_msg))).await?;
+        } else {
+            println!("不用关心的单双结果");
+        }
+        Ok(())
+    }
+
+
+    // 处理4预测结果是否发送微信通知
+    pub async fn handle_cal_four(&self, result: &Value) -> Result<(), Box<dyn std::error::Error>> {
         let res_data = result.get("data").unwrap().as_array().unwrap();
         let four_data = &res_data[1..5];
         // println!("获取最新的四条预测数据是: {four_data:?}");
@@ -306,33 +356,76 @@ impl Canada48 {
         println!("预测的四个结果是: {left_color:?} 右侧: {right_color:?}");
         // 判断左边颜色
         if left_color == vec!["蓝", "蓝", "蓝", "蓝"] {
-            println!("左侧预测: 四个蓝");
-            self.wx_pusher.push_summary(String::from("左侧四个蓝"), String::from("预测结果: 左侧四个蓝")).await?;
+            let send_msg = String::from("左侧蓝蓝蓝蓝");
+            println!("{}", send_msg);
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("预测结果: {}", send_msg))).await?;
         } else if left_color == vec!["红", "红", "红", "红"] {
-            println!("左侧四个红");
-            self.wx_pusher.push_summary(String::from("左侧四个红"), String::from("预测结果: 左侧四个红")).await?;
-        } else if left_color == vec!["蓝", "红", "蓝", "红"] {
-            println!("左侧蓝红蓝红");
-            self.wx_pusher.push_summary(String::from("左侧蓝红蓝红"), String::from("预测结果: 左侧蓝红蓝红")).await?;
-        } else if left_color == vec!["红", "蓝", "红", "蓝"] {
-            println!("左侧红蓝红蓝");
-            self.wx_pusher.push_summary(String::from("左侧红蓝红蓝"), String::from("预测结果: 左侧红蓝红蓝")).await?;
+            let send_msg = String::from("左侧红红红红");
+            println!("{}", send_msg);
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("预测结果: {}", send_msg))).await?;
         } else {
             println!("左侧不用关心的结果");
         }
         // 判断右边颜色
         if right_color == vec!["蓝", "蓝", "蓝", "蓝"] {
-            println!("右侧四个蓝");
-            self.wx_pusher.push_summary(String::from("右侧四个蓝"), String::from("预测结果: 右侧四个蓝")).await?;
+            let send_msg = String::from("右侧蓝蓝蓝蓝");
+            println!("{}", send_msg);
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("预测结果: {}", send_msg))).await?;
         } else if right_color == vec!["红", "红", "红", "红"] {
-            println!("右侧四个红");
-            self.wx_pusher.push_summary(String::from("右侧四个红"), String::from("预测结果: 右侧四个红")).await?;
-        } else if right_color == vec!["蓝", "红", "蓝", "红"] {
-            println!("右侧蓝红蓝红");
-            self.wx_pusher.push_summary(String::from("右侧蓝红蓝红"), String::from("预测结果: 右侧蓝红蓝红")).await?;
-        } else if right_color == vec!["红", "蓝", "红", "蓝"] {
-            println!("右侧红蓝红蓝");
-            self.wx_pusher.push_summary(String::from("右侧红蓝红蓝"), String::from("预测结果: 右侧红蓝红蓝")).await?;
+            let send_msg = String::from("右侧红红红红");
+            println!("{}", send_msg);
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("预测结果: {}", send_msg))).await?;
+        } else {
+            println!("右侧不用关心的结果");
+        }
+        Ok(())
+    }
+
+    // 处理5条结果是否发送微信通知
+    pub async fn handle_cal_five(&self, result: &Value) -> Result<(), Box<dyn std::error::Error>> {
+        let res_data = result.get("data").unwrap().as_array().unwrap();
+        let four_data = &res_data[1..6];
+        // println!("获取最新的四条预测数据是: {four_data:?}");
+        let mut left_color: Vec<&str> = vec![];
+        let mut right_color: Vec<&str> = vec![];
+        for data in four_data.iter() {
+            let r1_r = data.get("r1_r").unwrap().as_i64().unwrap();
+            let r2_r = data.get("r2_r").unwrap().as_i64().unwrap();
+            // 判断左边颜色：0蓝 1红
+            if r1_r == 0 {
+                left_color.push("蓝");
+            } else {
+                left_color.push("红");
+            }
+            // 判断右边颜色：0蓝 1红
+            if r2_r == 0 {
+                right_color.push("蓝");
+            } else {
+                right_color.push("红");
+            }
+        }
+        println!("预测的五个结果是: {left_color:?} 右侧: {right_color:?}");
+        // 判断左边颜色
+        if left_color == vec!["蓝", "红", "蓝", "红", "蓝"] {
+            let send_msg = String::from("左侧蓝红蓝红蓝");
+            println!("{}", send_msg);
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("预测结果: {}", send_msg))).await?;
+        } else if left_color == vec!["红", "蓝", "红", "蓝", "红"] {
+            let send_msg = String::from("左侧红蓝红蓝红");
+            println!("{}", send_msg);
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("预测结果: {}", send_msg))).await?;
+        } else {
+            println!("左侧不用关心的结果");
+        }
+        // 判断右边颜色
+        if right_color == vec!["蓝", "红", "蓝", "红", "蓝"] {
+            let send_msg = String::from("右侧蓝红蓝红蓝");
+            println!("{}", send_msg);
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("预测结果: {}", send_msg))).await?;
+        } else if right_color == vec!["红", "蓝", "红", "蓝", "红"] {
+            let send_msg = String::from("右侧红蓝红蓝红");
+            println!("{}", send_msg);
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("预测结果: {}", send_msg))).await?;
         } else {
             println!("右侧不用关心的结果");
         }
