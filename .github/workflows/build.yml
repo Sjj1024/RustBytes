@@ -1,13 +1,15 @@
-name: Build and Release
+name: Build Windows Executable
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
-  workflow_dispatch:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build-windows:
+  build:
     runs-on: windows-latest
 
     steps:
@@ -21,6 +23,22 @@ jobs:
           toolchain: stable
           target: x86_64-pc-windows-msvc
 
+      - name: Cache Cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-
+
       - name: Build
         run: cargo build --release
 
@@ -29,139 +47,3 @@ jobs:
         with:
           name: windows-executable
           path: target/release/*.exe
-
-  build-macos:
-    runs-on: macos-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-
-      - name: Build
-        run: cargo build --release
-
-      - name: Create DMG
-        run: |
-          mkdir dmg
-          cp target/release/your_executable dmg/
-          hdiutil create your_project.dmg -srcfolder dmg
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: macos-dmg
-          path: your_project.dmg
-
-  build-linux:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-
-      - name: Install dependencies
-        run: sudo apt-get install -y fakeroot dpkg-dev
-
-      - name: Build
-        run: cargo build --release
-
-      - name: Create DEB package
-        run: |
-          mkdir -p debian/DEBIAN
-          mkdir -p debian/usr/local/bin
-          cp target/release/your_executable debian/usr/local/bin/
-          echo "Package: your_project" > debian/DEBIAN/control
-          echo "Version: 1.0.0" >> debian/DEBIAN/control
-          echo "Section: base" >> debian/DEBIAN/control
-          echo "Priority: optional" >> debian/DEBIAN/control
-          echo "Architecture: amd64" >> debian/DEBIAN/control
-          echo "Essential: no" >> debian/DEBIAN/control
-          echo "Installed-Size: `du -s debian/usr | cut -f1`" >> debian/DEBIAN/control
-          echo "Maintainer: Your Name <your.email@example.com>" >> debian/DEBIAN/control
-          echo "Description: Your project description" >> debian/DEBIAN/control
-          dpkg-deb --build debian your_project.deb
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: linux-deb
-          path: your_project.deb
-
-  release:
-    needs: [build-windows, build-macos, build-linux]
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Download Windows artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: windows-executable
-          path: ./dist
-
-      - name: Download macOS artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: macos-dmg
-          path: ./dist
-
-      - name: Download Linux artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: linux-deb
-          path: ./dist
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/windows-executable/*.exe
-          asset_name: windows-executable-${{ github.ref }}.exe
-          asset_content_type: application/octet-stream
-
-      - name: Upload macOS DMG
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/macos-dmg/*.dmg
-          asset_name: macos-dmg-${{ github.ref }}.dmg
-          asset_content_type: application/octet-stream
-
-      - name: Upload Linux DEB
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/linux-deb/*.deb
-          asset_name: linux-deb-${{ github.ref }}.deb
-          asset_content_type: application/octet-stream
