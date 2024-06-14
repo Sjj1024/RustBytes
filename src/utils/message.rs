@@ -5,7 +5,7 @@ pub struct WxPusher {
     request: Client,
     app_token: String,
     base_url: String,
-    user_ids: String,
+    user_ids: Vec<String>,
 }
 
 
@@ -16,9 +16,10 @@ impl WxPusher {
             .build()
             .unwrap();
         // 推送给的客户UUID
-        // let users = String::from("UID_jhavxjntRoEkhw6xGVqSEZGNFDbD");
-        // 下面这是客户的UUID
-        let users = String::from("UID_t4vpwPTSyoZ2jcVoozq18hreLOP3");
+        // UID_jhavxjntRoEkhw6xGVqSEZGNFDbD woziji
+        // 下面这是客户的UUID UID_t4vpwPTSyoZ2jcVoozq18hreLOP3客户
+        let users = vec![String::from("UID_jhavxjntRoEkhw6xGVqSEZGNFDbD"), String::from("UID_t4vpwPTSyoZ2jcVoozq18hreLOP3")];
+        // let users = String::from("UID_t4vpwPTSyoZ2jcVoozq18hreLOP3");
         return WxPusher { request: client, app_token: token, base_url: String::from("https://wxpusher.zjiecode.com/api/send/message"), user_ids: users };
     }
 
@@ -32,7 +33,7 @@ impl WxPusher {
             "summary": "消息摘要2",
             "contentType": 2,
             "verifyPayType": 0,
-            "uids": [self.user_ids]
+            "uids": self.user_ids
         });
         let request = self.request.request(reqwest::Method::POST, &self.base_url)
             .headers(headers)
@@ -54,7 +55,7 @@ impl WxPusher {
             "summary": "消息摘要2",
             "contentType": 2,
             "verifyPayType": 0,
-            "uids": [self.user_ids]
+            "uids": self.user_ids
         });
         let request = self.request.request(reqwest::Method::POST, &self.base_url)
             .headers(headers)
@@ -76,7 +77,7 @@ impl WxPusher {
             "summary": summary,
             "contentType": 2,
             "verifyPayType": 0,
-            "uids": [self.user_ids]
+            "uids": self.user_ids
         });
         let request = self.request.request(reqwest::Method::POST, &self.base_url)
             .headers(headers)
