@@ -32,11 +32,13 @@ impl Canada48 {
             self.get_calculate().await?;
             // 再等待5秒后开始循环
             println!("开始获取下次开奖时间......");
+            // 下次开奖section
+            let mut section: u64 = 0;
             // 获取下次开奖时间，如果超过30分钟，等待10秒钟重新获取
             let mut next_second = Duration::from_millis(1);
             for _ in 1..10 {
                 tokio::time::sleep(Duration::from_secs(10)).await;
-                next_second = self.get_next().await?;
+                (next_second, section) = self.get_next().await?;
                 let inner_duration = next_second.as_secs();
                 // 如果开奖时间超过30分钟，发送消息报错
                 let minutes_last = inner_duration / 60;
@@ -47,14 +49,45 @@ impl Canada48 {
                 }
             }
             // let next_second = self.get_next().await.unwrap();
-            // 控制台刷新还剩多少秒
+            // 控制台刷新还剩多少秒,等待一段时间，模拟耗时操作
             self.flush_second(&next_second).await?;
-            // 等待一段时间，模拟耗时操作
-            // tokio::time::sleep(next_second).await;
             println!("\n开始获取最新结果数据......");
+            // 检测下次开奖section是否已经开奖，已经开奖才执行后续逻辑，否则持续检测
+            for _ in 1..10 {
+                if self.check_section(&section).await? {
+                    println!("继续检测开奖结果...");
+                } else {
+                    break;
+                }
+            }
             // 要多等待几秒钟才可以向服务器发送最新数据，否则获取不到最新数据
             tokio::time::sleep(Duration::from_millis(7000)).await;
         }
+    }
+
+    // 持续检测section是否已经开奖
+    pub async fn check_section(&self, section: &u64) -> Result<bool, Box<dyn std::error::Error>> {
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert("Accept", "*/*".parse()?);
+        headers.insert("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8".parse()?);
+        headers.insert("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8".parse()?);
+        headers.insert("Origin", "http://23.225.7.133:828".parse()?);
+        headers.insert("Proxy-Connection", "keep-alive".parse()?);
+        headers.insert("Referer", "http://23.225.7.133:828/".parse()?);
+        headers.insert("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36".parse()?);
+        headers.insert("X-Requested-With", "XMLHttpRequest".parse()?);
+        let data = format!("section={}", section);
+        let request = self.request.post("http://23.225.7.133:828/Mobile/Indexs/open/type/2")
+            .headers(headers)
+            .body(data);
+        let response = request.send().await?;
+        let body = response.text().await?;
+        println!("检测开奖结果: {}", body);
+        return if body.contains(r#""""#) {
+            Ok(true)
+        } else {
+            Ok(false)
+        };
     }
 
     // 控制台倒计时
@@ -85,7 +118,7 @@ impl Canada48 {
 
 
     // 获取下次开奖时间
-    pub async fn get_next(&self) -> Result<Duration, Box<dyn std::error::Error>> {
+    pub async fn get_next(&self) -> Result<(Duration, u64), Box<dyn std::error::Error>> {
         // println!("获取下次开奖时间......");
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert("Accept", "application/json, text/javascript, */*; q=0.01".parse()?);
@@ -105,14 +138,19 @@ impl Canada48 {
             let open_time_s = map_value.get("openTime_s").unwrap().as_str().unwrap();
             let open_time = map_value.get("openTime").unwrap().as_u64().unwrap();
             let server_time = map_value.get("serverTime").unwrap().as_u64().unwrap();
+            let section = map_value.get("section").unwrap().as_u64().unwrap();
             // 本地当前时间戳
             let local_time = SystemTime::now();
             let since_epoch = local_time.duration_since(UNIX_EPOCH).unwrap().as_millis();
             // 如果服务器时间<开奖时间，就用服务器时间，否则使用本地时间
             let since_millis: u64;
+            // 有可能是开奖时间小于服务器时间和本地时间，说明开奖时间有问题
             if server_time < open_time {
                 since_millis = open_time - server_time;
+            } else if (since_epoch as u64) < open_time {
+                since_millis = open_time.wrapping_sub(since_epoch as u64);
             } else {
+                // 说明开奖时间有问题了
                 since_millis = open_time.wrapping_sub(since_epoch as u64);
             }
             // 还剩多少毫秒
@@ -122,7 +160,7 @@ impl Canada48 {
             println!("服务器时间: {server_time}");
             println!("本地器时间: {since_epoch}");
             println!("开奖剩余时间: {}秒", duration.as_secs());
-            return Ok(duration);
+            return Ok((duration, section));
         } else {
             println!("返回json数据异常:{body}");
             panic!("需要开代理才可以访问网站！");
