@@ -170,7 +170,7 @@ impl Canada48 {
 
     // 获取开奖结果
     pub async fn get_result(&self) -> Result<(), Box<dyn std::error::Error>> {
-        println!("获取开奖结果......");
+        println!("获取最新5条开奖结果......");
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert("Accept", "application/json, text/javascript, */*; q=0.01".parse()?);
         headers.insert("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8".parse()?);
