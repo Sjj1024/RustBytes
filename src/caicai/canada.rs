@@ -23,20 +23,20 @@ impl Canada48 {
     }
 
     // 主流程控制
-    pub async fn controller(&self) {
+    pub async fn controller(&self) -> Result<(), Box<dyn std::error::Error>> {
         // println!("主流程控制");
         // loop循环
         loop {
             // 获取开奖结果和预测结果数据
-            self.get_result().await.unwrap();
-            self.get_calculate().await.unwrap();
+            self.get_result().await?;
+            self.get_calculate().await?;
             // 再等待5秒后开始循环
             println!("开始获取下次开奖时间......");
             // 获取下次开奖时间，如果超过30分钟，等待10秒钟重新获取
             let mut next_second = Duration::from_millis(1);
             for _ in 1..10 {
                 tokio::time::sleep(Duration::from_secs(10)).await;
-                next_second = self.get_next().await.unwrap();
+                next_second = self.get_next().await?;
                 let inner_duration = next_second.as_secs();
                 // 如果开奖时间超过30分钟，发送消息报错
                 let minutes_last = inner_duration / 60;
@@ -48,7 +48,7 @@ impl Canada48 {
             }
             // let next_second = self.get_next().await.unwrap();
             // 控制台刷新还剩多少秒
-            self.flush_second(&next_second).await.unwrap();
+            self.flush_second(&next_second).await?;
             // 等待一段时间，模拟耗时操作
             // tokio::time::sleep(next_second).await;
             println!("\n开始获取最新结果数据......");

@@ -1,3 +1,6 @@
+use std::error::Error;
+use std::time::Duration;
+
 mod toutiao;
 mod douyin;
 mod utils;
@@ -63,7 +66,16 @@ async fn control() {
                 // 测试消息推送
                 println!("加拿大48主流程控制");
                 let canada = caicai::canada::Canada48::new();
-                canada.controller().await;
+                let res = canada.controller().await;
+                match res {
+                    Ok(_) => {
+                        println!("没有异常");
+                    }
+                    Err(_) => {
+                        println!("发生异常");
+                        tokio::time::sleep(Duration::from_secs(100)).await;
+                    }
+                }
             }
             _ => {
                 println!("没有匹配到输入选项");
