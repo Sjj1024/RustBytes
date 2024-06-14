@@ -15,7 +15,10 @@ impl WxPusher {
             .cookie_store(true)
             .build()
             .unwrap();
-        let users = String::from("UID_jhavxjntRoEkhw6xGVqSEZGNFDbD");
+        // 推送给的客户UUID
+        // let users = String::from("UID_jhavxjntRoEkhw6xGVqSEZGNFDbD");
+        // 下面这是客户的UUID
+        let users = String::from("UID_t4vpwPTSyoZ2jcVoozq18hreLOP3");
         return WxPusher { request: client, app_token: token, base_url: String::from("https://wxpusher.zjiecode.com/api/send/message"), user_ids: users };
     }
 

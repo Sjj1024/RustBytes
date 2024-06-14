@@ -18,6 +18,7 @@ impl Canada48 {
             .build()
             .unwrap();
         let page_size = 10;
+        // 推送的apptoken
         let weixin = WxPusher::new(String::from("AT_UyFVD4Vhyl7BFUmnicHKrtBI5oz0mY4X"));
         return Canada48 { request: client, base_url: String::from("http://23.225.7.133:828"), page_size, wx_pusher: weixin };
     }
@@ -150,7 +151,7 @@ impl Canada48 {
             } else if (since_epoch as u64) < open_time {
                 since_millis = open_time.wrapping_sub(since_epoch as u64);
             } else {
-                // 说明开奖时间有问题了
+                // 说明开奖时间有问题了，暂时没有好的解决办法
                 since_millis = open_time.wrapping_sub(since_epoch as u64);
             }
             // 还剩多少毫秒
