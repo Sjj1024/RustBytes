@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::io::{self, Write};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use reqwest::Client;
@@ -169,7 +170,7 @@ impl Canada48 {
     }
 
     // 获取开奖结果
-    pub async fn get_result(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn get_result(&self) -> Result<(), Box<dyn Error>> {
         println!("获取最新5条开奖结果......");
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert("Accept", "application/json, text/javascript, */*; q=0.01".parse()?);
@@ -191,7 +192,7 @@ impl Canada48 {
             Ok(())
         } else {
             println!("返回json数据异常:{body}");
-            panic!("需要开代理才可以访问网站！");
+            Err(Box::from("可能需要开启代理才可以访问".to_string()))
         }
     }
 
