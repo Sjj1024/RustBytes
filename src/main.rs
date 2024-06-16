@@ -4,7 +4,6 @@ use std::time::Duration;
 mod toutiao;
 mod douyin;
 mod utils;
-mod caicai;
 
 
 async fn control() -> Result<(), Box<dyn Error>> {
@@ -17,8 +16,8 @@ async fn control() -> Result<(), Box<dyn Error>> {
         println!("有命令行参数: {args:?}");
         Ok(())
     } else {
-        // let input = utils::common::select_action();
-        let input = 8;
+        let input = utils::common::select_action();
+        // let input = 8;
         match input {
             1 => {
                 // 直播间弹幕
@@ -54,27 +53,6 @@ async fn control() -> Result<(), Box<dyn Error>> {
                 println!("用户输入5，定制消息推送");
                 let wx = utils::message::WxPusher::new(String::from("AT_UyFVD4Vhyl7BFUmnicHKrtBI5oz0mY4X"));
                 wx.push_msg(String::from("你好啊，大佬")).await?;
-                Ok(())
-            }
-            6 => {
-                // 测试消息推送
-                println!("用户输入6，获取加拿大48的结果");
-                let canada = caicai::canada::Canada48::new();
-                canada.get_result().await?;
-                Ok(())
-            }
-            7 => {
-                // 测试消息推送
-                println!("用户输入7，获取加拿大48的预测结果");
-                let canada = caicai::canada::Canada48::new();
-                canada.get_calculate().await?;
-                Ok(())
-            }
-            8 => {
-                // 测试消息推送
-                println!("加拿大48主流程控制");
-                let canada = caicai::canada::Canada48::new();
-                canada.controller().await?;
                 Ok(())
             }
             _ => {

@@ -12,9 +12,6 @@ pub fn select_action() -> i32 {
 3.抖音直播间礼物排行榜
 4.测试微信消息推送
 5.定制微信消息推送
-6.获取加拿大48的结果
-7.获取加拿大48的预测结果
-8.运行加拿大48主流程程序
 请输入:");
     // wait use select
     let mut user_input = String::new();
