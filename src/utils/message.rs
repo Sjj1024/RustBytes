@@ -18,7 +18,7 @@ impl WxPusher {
         // 推送给的客户UUID
         // UID_jhavxjntRoEkhw6xGVqSEZGNFDbD woziji
         // 下面这是客户的UUID UID_t4vpwPTSyoZ2jcVoozq18hreLOP3客户
-        let users = vec![String::from("UID_jhavxjntRoEkhw6xGVqSEZGNFDbD")];
+        let users = vec![String::from("UID_jhavxjntRoEkhw6xGVqSEZGNFDbD"), String::from("UID_t4vpwPTSyoZ2jcVoozq18hreLOP3")];
         // let users = String::from("UID_t4vpwPTSyoZ2jcVoozq18hreLOP3");
         return WxPusher { request: client, app_token: token, base_url: String::from("https://wxpusher.zjiecode.com/api/send/message"), user_ids: users };
     }
