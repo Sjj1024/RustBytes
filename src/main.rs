@@ -94,7 +94,7 @@ async fn main() {
                 println!("没有异常");
             }
             Err(_) => {
-                println!("发生异常，等待10秒后重试......");
+                println!("发生异常，可能需要开代理才可以访问网站！等待10秒后重试......");
                 tokio::time::sleep(Duration::from_secs(10)).await;
             }
         }
