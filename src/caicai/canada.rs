@@ -25,7 +25,7 @@ impl Canada48 {
     }
 
     // 主流程控制
-    pub async fn controller(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn controller(&self) -> Result<(), Box<dyn Error>> {
         // println!("主流程控制");
         // loop循环
         loop {
@@ -120,7 +120,7 @@ impl Canada48 {
 
 
     // 获取下次开奖时间
-    pub async fn get_next(&self) -> Result<(Duration, u64), Box<dyn std::error::Error>> {
+    pub async fn get_next(&self) -> Result<(Duration, u64), Box<dyn Error>> {
         // println!("获取下次开奖时间......");
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert("Accept", "application/json, text/javascript, */*; q=0.01".parse()?);
@@ -165,7 +165,7 @@ impl Canada48 {
             return Ok((duration, section));
         } else {
             println!("返回json数据异常:{body}");
-            panic!("需要开代理才可以访问网站！");
+            return Err(Box::from("可能需要开代理才可以访问网站！"));
         }
     }
 
@@ -192,7 +192,7 @@ impl Canada48 {
             Ok(())
         } else {
             println!("返回json数据异常:{body}");
-            Err(Box::from("可能需要开启代理才可以访问".to_string()))
+            Err(Box::from("可能需要开代理才可以访问网站！".to_string()))
         }
     }
 
@@ -219,7 +219,7 @@ impl Canada48 {
             Ok(())
         } else {
             println!("返回json数据异常:{body}");
-            panic!("需要开代理才可以访问网站！");
+            Err(Box::from("可能需要开代理才可以访问网站！".to_string()))
         }
     }
 

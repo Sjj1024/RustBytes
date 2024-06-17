@@ -87,14 +87,16 @@ async fn control() -> Result<(), Box<dyn Error>> {
 
 #[tokio::main]
 async fn main() {
-    let res = control().await;
-    match res {
-        Ok(_) => {
-            println!("没有异常");
-        }
-        Err(_) => {
-            println!("发生异常");
-            tokio::time::sleep(Duration::from_secs(100)).await;
+    loop {
+        let res = control().await;
+        match res {
+            Ok(_) => {
+                println!("没有异常");
+            }
+            Err(_) => {
+                println!("发生异常，等待10秒后重试......");
+                tokio::time::sleep(Duration::from_secs(10)).await;
+            }
         }
     }
 }
