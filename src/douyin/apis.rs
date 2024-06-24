@@ -42,6 +42,11 @@ impl DouYinReq {
         let request = self.request.get(self.room_url.clone())
             .headers(headers);
         let response = request.send().await?;
+        // 获取cookie
+        let cookies = response.cookies();
+        for c in cookies {
+            println!("cookies: {:?}", c.name());
+        }
         let body = response.text().await?;
         // println!("获取的直播间HTML内容是：{}", body);
         // 使用正则表达式匹配直播间ID
