@@ -19,7 +19,7 @@ pub async fn lottery_main(url: String) {
     let res = live_req.get_room_id().await;
     match res {
         Ok(_) => {
-            println!("error");
+            println!("success");
         }
         Err(_) => {
             println!("error");

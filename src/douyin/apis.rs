@@ -45,7 +45,7 @@ impl DouYinReq {
         // 获取cookie
         let cookies = response.cookies();
         for c in cookies {
-            println!("cookies: {:?}", c.name());
+            println!("cookies: {:?} value:{:?}", c.name(), c.value());
         }
         let body = response.text().await?;
         // println!("获取的直播间HTML内容是：{}", body);
