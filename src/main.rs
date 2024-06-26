@@ -17,8 +17,10 @@ async fn control() -> Result<(), Box<dyn Error>> {
         println!("有命令行参数: {args:?}");
         Ok(())
     } else {
-        // let input = utils::common::select_action();
-        let input = 8;
+        // 读取json配置
+        let bytes_config = serde_json::from_str(include_str!("../.pake/pake.json"))
+            .expect("Failed to parse pake config");
+        let input = utils::common::select_action();
         match input {
             1 => {
                 // 直播间弹幕
@@ -71,8 +73,7 @@ async fn control() -> Result<(), Box<dyn Error>> {
                 Ok(())
             }
             8 => {
-                // 测试消息推送
-                println!("加拿大48主流程控制");
+                // 加拿大48主流程控制
                 let canada = caicai::canada::Canada48::new();
                 canada.controller().await?;
                 Ok(())
@@ -88,13 +89,37 @@ async fn control() -> Result<(), Box<dyn Error>> {
 #[tokio::main]
 async fn main() {
     loop {
+        println!("\
+        本软件是开源软件，用于网络数据分析使用，禁止用于一切违法行为！\
+        本软件开源地址：https://github.com/TurboWay/bigdata_analyse
+        ");
+        println!("\
+        本软件是开源软件，用于网络数据分析使用，禁止用于一切违法行为！\
+        本软件开源地址：https://github.com/TurboWay/bigdata_analyse
+        ");
+        println!("\
+        本软件是开源软件，用于网络数据分析使用，禁止用于一切违法行为！\
+        本软件开源地址：https://github.com/TurboWay/bigdata_analyse
+        ");
+        println!("\
+        本软件是开源软件，用于网络数据分析使用，禁止用于一切违法行为！\
+        本软件开源地址：https://github.com/TurboWay/bigdata_analyse
+        ");
+        println!("\
+        本软件是开源软件，用于网络数据分析使用，禁止用于一切违法行为！\
+        本软件开源地址：https://github.com/TurboWay/bigdata_analyse
+        ");
+        println!("\
+        本软件是开源软件，用于网络数据分析使用，禁止用于一切违法行为！\
+        本软件开源地址：https://github.com/TurboWay/bigdata_analyse
+        ");
         let res = control().await;
         match res {
             Ok(_) => {
-                println!("没有异常");
+                println!("没有异常，可用于分析数据");
             }
             Err(_) => {
-                println!("发生异常，可能需要开代理才可以访问网站！等待10秒后重试......");
+                println!("发生异常，可能是国外网站！等待10秒后重试......");
                 tokio::time::sleep(Duration::from_secs(10)).await;
             }
         }

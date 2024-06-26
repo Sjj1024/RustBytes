@@ -5,23 +5,12 @@ pub enum Select {
 }
 
 pub fn select_action() -> i32 {
-    println!("
-请选择要执行的操作:
-1.抖音直播间弹幕礼物抓取
-2.抖音直播间福袋信息抓取
-3.抖音直播间礼物排行榜
-4.测试微信消息推送
-5.定制微信消息推送
-6.获取加拿大48的结果
-7.获取加拿大48的预测结果
-8.运行加拿大48主流程程序
-请输入:");
+    println!("请输入要分析的网站地址:");
     // wait use select
     let mut user_input = String::new();
     stdin().read_line(&mut user_input).unwrap();
-    let input_num: i32 = user_input.trim().parse().unwrap();
-    println!("用户的输入是:{input_num:?}");
-    return input_num;
+    println!("用户输入的是:{user_input:?}");
+    return 8;
 }
 
 
