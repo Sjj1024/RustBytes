@@ -1,5 +1,6 @@
 {
   "url": "http://23.225.7.133:828",
+  "data": ["total", "openNum"],
   "appToken": "AT_UyFVD4Vhyl7BFUmnicHKrtBI5oz0mY4X",
   "userIds": [
     "UID_jhavxjntRoEkhw6xGVqSEZGNFDbD"
