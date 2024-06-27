@@ -1,4 +1,5 @@
 use reqwest::Client;
+use serde_json::Value;
 
 // 发送消息的实现
 pub struct WxPusher {
@@ -10,25 +11,33 @@ pub struct WxPusher {
 
 
 impl WxPusher {
-    pub fn new(token: String) -> Self {
+    pub fn new(token: String, user_ids: &Value) -> Self {
         let client = Client::builder()
             .cookie_store(true)
             .build()
             .unwrap();
         // 推送给的客户UUID
         // UID_jhavxjntRoEkhw6xGVqSEZGNFDbD woziji
-        let users = vec![
-            String::from("UID_jhavxjntRoEkhw6xGVqSEZGNFDbD"),
-            // String::from("UID_t4vpwPTSyoZ2jcVoozq18hreLOP3"),
-            // String::from("UID_c9dRNjvb7dUm5mMyDpqqUChEUbm4"),
-            // String::from("UID_2r6taC4yJi2bxmYGj5w8uUv3avJI")
-        ];
+        // let users = vec![
+        //     String::from("UID_jhavxjntRoEkhw6xGVqSEZGNFDbD"),
+        //     // String::from("UID_t4vpwPTSyoZ2jcVoozq18hreLOP3"),
+        //     // String::from("UID_c9dRNjvb7dUm5mMyDpqqUChEUbm4"),
+        //     // String::from("UID_2r6taC4yJi2bxmYGj5w8uUv3avJI")
+        // ];
+        let mut user_array = vec![];
+        let users = user_ids.as_array().unwrap();
+        for u in users.iter() {
+            let user = u.as_str().unwrap();
+            if user != "" {
+                user_array.push(String::from(user))
+            }
+        }
         // let users = String::from("UID_t4vpwPTSyoZ2jcVoozq18hreLOP3");
-        return WxPusher { request: client, app_token: token, base_url: String::from("https://wxpusher.zjiecode.com/api/send/message"), user_ids: users };
+        return WxPusher { request: client, app_token: token, base_url: String::from("https://wxpusher.zjiecode.com/api/send/message"), user_ids: user_array };
     }
 
     pub async fn test_push(&self) -> Result<(), Box<dyn std::error::Error>> {
-        println!("尝试推送微信消息......");
+        // println!("test send message......");
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert("Content-Type", "application/json".parse()?);
         let json = serde_json::json!({
@@ -44,13 +53,13 @@ impl WxPusher {
             .json(&json);
         let response = request.send().await?;
         let body = response.text().await?;
-        println!("send wx: {}", body);
+        // println!("send wx: {}", body);
         Ok(())
     }
 
 
     pub async fn push_msg(&self, msg: String) -> Result<(), Box<dyn std::error::Error>> {
-        println!("尝试推送微信消息......");
+        // println!("尝试推送微信消息......");
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert("Content-Type", "application/json".parse()?);
         let json = serde_json::json!({
@@ -66,13 +75,13 @@ impl WxPusher {
             .json(&json);
         let response = request.send().await?;
         let body = response.text().await?;
-        println!("send wx: {}", body);
+        // println!("send wx: {}", body);
         Ok(())
     }
 
 
     pub async fn push_summary(&self, summary: &String, msg: String) -> Result<(), Box<dyn std::error::Error>> {
-        println!("尝试推送微信消息......");
+        // println!("尝试推送微信消息......");
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert("Content-Type", "application/json".parse()?);
         let json = serde_json::json!({
@@ -88,7 +97,7 @@ impl WxPusher {
             .json(&json);
         let response = request.send().await?;
         let body = response.text().await?;
-        println!("send wx: {}", body);
+        // println!("send wx: {}", body);
         Ok(())
     }
 }

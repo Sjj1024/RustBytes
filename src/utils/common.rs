@@ -4,13 +4,13 @@ pub enum Select {
     Input(i32)
 }
 
-pub fn select_action() -> i32 {
+pub fn select_action() -> String {
     println!("请输入要分析的网站地址:");
     // wait use select
     let mut user_input = String::new();
     stdin().read_line(&mut user_input).unwrap();
     println!("用户输入的是:{user_input:?}");
-    return 8;
+    return user_input;
 }
 
 
