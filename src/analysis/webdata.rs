@@ -33,7 +33,7 @@ impl AnalysisData {
         // // println!("主流程控制");
         // loop循环
         loop {
-            // 获取开奖结果和预测结果数据
+            // 获取data和盲猜数据
             self.get_result().await?;
             self.get_calculate().await?;
             // 再等待5秒后开始循环
@@ -114,7 +114,8 @@ impl AnalysisData {
             let minutes = inner_duration / 60;
             let seconds = inner_duration % 60;
             let format_second = if seconds < 10 { format!("0{seconds:?}") } else { format!("{seconds:?}") };
-            print!("\rnext time: {minutes:?}m{format_second}s");
+            // print!("\rnext time: {minutes:?}m{format_second}s");
+            // print!("\r{inner_duration}");
             io::stdout().flush().unwrap();
             if inner_duration - 1 <= 0 {
                 return Ok(());
@@ -150,7 +151,7 @@ impl AnalysisData {
             let since_epoch = local_time.duration_since(UNIX_EPOCH).unwrap().as_millis();
             // 如果服务器时间<开奖时间，就用服务器时间，否则使用本地时间
             let since_millis: u64;
-            // 有可能是开奖时间小于服务器时间和本地时间，说明开奖时间有问题
+            // 有可能是开奖时间0于服务器时间和本地时间，说明开奖时间有问题
             if server_time < open_time {
                 since_millis = open_time - server_time;
             } else if (since_epoch as u64) < open_time {
@@ -173,7 +174,7 @@ impl AnalysisData {
         }
     }
 
-    // 获取开奖结果
+    // 获取data
     pub async fn get_result(&self) -> Result<(), Box<dyn Error>> {
         // println!("get data......");
         let mut headers = reqwest::header::HeaderMap::new();
@@ -200,7 +201,7 @@ impl AnalysisData {
         }
     }
 
-    // 获取预测结果
+    // 获取盲猜
     pub async fn get_calculate(&self) -> Result<(), Box<dyn std::error::Error>> {
         // println!("get feature data......");
         let mut headers = reqwest::header::HeaderMap::new();
@@ -230,52 +231,52 @@ impl AnalysisData {
     // 处理4结果数据是否发送微信通知
     pub async fn handle_res_four(&self, result: &Value) -> Result<(), Box<dyn std::error::Error>> {
         let res_data = result.get("data").unwrap().as_array().unwrap();
-        // // println!("处理开奖结果: {res_data:?}");
+        // // println!("处理data: {res_data:?}");
         let last_four = &res_data[0..4];
         // // println!("获取最新的四条结果数据是: {last_four:?}");
         let mut open_nums: Vec<&str> = vec![];
         let mut single_dou: Vec<&str> = vec![];
         for data in last_four.iter() {
             let num = data.get("openNum").unwrap().as_i64().unwrap();
-            // 判断大小
+            // 判断10
             if num <= 13 {
-                open_nums.push("小");
+                open_nums.push("0");
             } else {
-                open_nums.push("大");
+                open_nums.push("1");
             }
-            // 判断单双
+            // 判断911
             if num % 2 == 0 {
                 // println!("double：{num:?}");
-                single_dou.push("双");
+                single_dou.push("11");
             } else {
                 // println!("single：{num:?}");
-                single_dou.push("单");
+                single_dou.push("9");
             }
         }
-        // // println!("open data: {open_nums:?} 单双结果是：{single_dou:?}");
-        // 判断大小
-        if open_nums == vec!["大", "大", "大", "大"] {
-            let send_msg = String::from("大大大大");
+        // // println!("open data: {open_nums:?} 911结果是：{single_dou:?}");
+        // 判断10
+        if open_nums == vec!["1", "1", "1", "1"] {
+            let send_msg = String::from("1111");
             // println!("{}", send_msg);
-            self.wx_pusher.push_summary(&send_msg, String::from(format!("开奖结果: {}", send_msg))).await?;
-        } else if open_nums == vec!["小", "小", "小", "小"] {
-            let send_msg = String::from("小小小小");
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("数据: {}", send_msg))).await?;
+        } else if open_nums == vec!["0", "0", "0", "0"] {
+            let send_msg = String::from("0000");
             // println!("{}", send_msg);
-            self.wx_pusher.push_summary(&send_msg, String::from(format!("开奖结果: {}", send_msg))).await?;
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("数据: {}", send_msg))).await?;
         } else {
-            // println!("不用关心的大小结果");
+            // println!("不用关心的10结果");
         }
-        // 判断单双
-        if single_dou == vec!["单", "单", "单", "单"] {
-            let send_msg = String::from("单单单单");
+        // 判断911
+        if single_dou == vec!["9", "9", "9", "9"] {
+            let send_msg = String::from("9999");
             // println!("{}", send_msg);
-            self.wx_pusher.push_summary(&send_msg, String::from(format!("开奖结果: {}", send_msg))).await?;
-        } else if single_dou == vec!["双", "双", "双", "双"] {
-            let send_msg = String::from("双双双双");
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("数据: {}", send_msg))).await?;
+        } else if single_dou == vec!["11", "11", "11", "11"] {
+            let send_msg = String::from("11111111");
             // println!("{}", send_msg);
-            self.wx_pusher.push_summary(&send_msg, String::from(format!("开奖结果: {}", send_msg))).await?;
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("数据: {}", send_msg))).await?;
         } else {
-            // println!("不用关心的单双结果");
+            // println!("不用关心的911结果");
         }
         Ok(())
     }
@@ -284,58 +285,58 @@ impl AnalysisData {
     // 处理5条数据是否发送微信通知
     pub async fn handle_res_five(&self, result: &Value) -> Result<(), Box<dyn std::error::Error>> {
         let res_data = result.get("data").unwrap().as_array().unwrap();
-        // // println!("处理开奖结果: {res_data:?}");
+        // // println!("处理data: {res_data:?}");
         let last_four = &res_data[0..5];
         // // println!("获取最新的四条结果数据是: {last_four:?}");
         let mut open_nums: Vec<&str> = vec![];
         let mut single_dou: Vec<&str> = vec![];
         for data in last_four.iter() {
             let num = data.get("openNum").unwrap().as_i64().unwrap();
-            // 判断大小
+            // 判断10
             if num <= 13 {
-                open_nums.push("小");
+                open_nums.push("0");
             } else {
-                open_nums.push("大");
+                open_nums.push("1");
             }
-            // 判断单双
+            // 判断911
             if num % 2 == 0 {
-                // println!("双数：{num:?}");
-                single_dou.push("双");
+                // println!("11数：{num:?}");
+                single_dou.push("11");
             } else {
-                // println!("单数：{num:?}");
-                single_dou.push("单");
+                // println!("9数：{num:?}");
+                single_dou.push("9");
             }
         }
-        // println!("开奖的五个结果大小是: {open_nums:?} 单双结果是：{single_dou:?}");
-        // 判断大小
-        if open_nums == vec!["小", "大", "小", "大", "小"] {
-            let send_msg = String::from("小大小大小");
+        // println!("开奖的五个结果10是: {open_nums:?} 911结果是：{single_dou:?}");
+        // 判断10
+        if open_nums == vec!["0", "1", "0", "1", "0"] {
+            let send_msg = String::from("01010");
             // println!("{}", send_msg);
-            self.wx_pusher.push_summary(&send_msg, String::from(format!("开奖结果: {}", send_msg))).await?;
-        } else if open_nums == vec!["大", "小", "大", "小", "大"] {
-            let send_msg = String::from("大小大小大");
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("数据: {}", send_msg))).await?;
+        } else if open_nums == vec!["1", "0", "1", "0", "1"] {
+            let send_msg = String::from("10101");
             // println!("{}", send_msg);
-            self.wx_pusher.push_summary(&send_msg, String::from(format!("开奖结果: {}", send_msg))).await?;
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("数据: {}", send_msg))).await?;
         } else {
-            // println!("不用关心的大小结果");
+            // println!("不用关心的10结果");
         }
-        // 判断单双
-        if single_dou == vec!["单", "双", "单", "双", "单"] {
-            let send_msg = String::from("单双单双单");
+        // 判断911
+        if single_dou == vec!["9", "11", "9", "11", "9"] {
+            let send_msg = String::from("9119119");
             // println!("{}", send_msg);
-            self.wx_pusher.push_summary(&send_msg, String::from(format!("开奖结果: {}", send_msg))).await?;
-        } else if single_dou == vec!["双", "单", "双", "单", "双"] {
-            let send_msg = String::from("双单双单双");
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("数据: {}", send_msg))).await?;
+        } else if single_dou == vec!["11", "9", "11", "9", "11"] {
+            let send_msg = String::from("11911911");
             // println!("{}", send_msg);
-            self.wx_pusher.push_summary(&send_msg, String::from(format!("开奖结果: {}", send_msg))).await?;
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("数据: {}", send_msg))).await?;
         } else {
-            // println!("不用关心的单双结果");
+            // println!("不用关心的911结果");
         }
         Ok(())
     }
 
 
-    // 处理4预测结果是否发送微信通知
+    // 处理4盲猜是否发送微信通知
     pub async fn handle_cal_four(&self, result: &Value) -> Result<(), Box<dyn std::error::Error>> {
         let res_data = result.get("data").unwrap().as_array().unwrap();
         let four_data = &res_data[1..5];
@@ -345,43 +346,43 @@ impl AnalysisData {
         for data in four_data.iter() {
             let r1_r = data.get("r1_r").unwrap().as_i64().unwrap();
             let r2_r = data.get("r2_r").unwrap().as_i64().unwrap();
-            // 判断左边颜色：0蓝 1红
+            // 判断左边颜色：0b 1r
             if r1_r == 0 {
-                left_color.push("蓝");
+                left_color.push("b");
             } else {
-                left_color.push("红");
+                left_color.push("r");
             }
-            // 判断右边颜色：0蓝 1红
+            // 判断右边颜色：0b 1r
             if r2_r == 0 {
-                right_color.push("蓝");
+                right_color.push("b");
             } else {
-                right_color.push("红");
+                right_color.push("r");
             }
         }
-        // println!("预测的四个结果是: {left_color:?} 右侧: {right_color:?}");
+        // println!("预测的四个结果是: {left_color:?} r: {right_color:?}");
         // 判断左边颜色
-        if left_color == vec!["蓝", "蓝", "蓝", "蓝"] {
-            let send_msg = String::from("左侧蓝蓝蓝蓝");
+        if left_color == vec!["b", "b", "b", "b"] {
+            let send_msg = String::from("lbbbb");
             // println!("{}", send_msg);
-            self.wx_pusher.push_summary(&send_msg, String::from(format!("预测结果: {}", send_msg))).await?;
-        } else if left_color == vec!["红", "红", "红", "红"] {
-            let send_msg = String::from("左侧红红红红");
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("盲猜: {}", send_msg))).await?;
+        } else if left_color == vec!["r", "r", "r", "r"] {
+            let send_msg = String::from("lrrrr");
             // println!("{}", send_msg);
-            self.wx_pusher.push_summary(&send_msg, String::from(format!("预测结果: {}", send_msg))).await?;
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("盲猜: {}", send_msg))).await?;
         } else {
-            // println!("左侧不用关心的结果");
+            // println!("l不用关心的结果");
         }
         // 判断右边颜色
-        if right_color == vec!["蓝", "蓝", "蓝", "蓝"] {
-            let send_msg = String::from("右侧蓝蓝蓝蓝");
+        if right_color == vec!["b", "b", "b", "b"] {
+            let send_msg = String::from("rbbbb");
             // println!("{}", send_msg);
-            self.wx_pusher.push_summary(&send_msg, String::from(format!("预测结果: {}", send_msg))).await?;
-        } else if right_color == vec!["红", "红", "红", "红"] {
-            let send_msg = String::from("右侧红红红红");
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("盲猜: {}", send_msg))).await?;
+        } else if right_color == vec!["r", "r", "r", "r"] {
+            let send_msg = String::from("rrrrr");
             // println!("{}", send_msg);
-            self.wx_pusher.push_summary(&send_msg, String::from(format!("预测结果: {}", send_msg))).await?;
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("盲猜: {}", send_msg))).await?;
         } else {
-            // println!("右侧不用关心的结果");
+            // println!("r不用关心的结果");
         }
         Ok(())
     }
@@ -396,43 +397,43 @@ impl AnalysisData {
         for data in four_data.iter() {
             let r1_r = data.get("r1_r").unwrap().as_i64().unwrap();
             let r2_r = data.get("r2_r").unwrap().as_i64().unwrap();
-            // 判断左边颜色：0蓝 1红
+            // 判断左边颜色：0b 1r
             if r1_r == 0 {
-                left_color.push("蓝");
+                left_color.push("b");
             } else {
-                left_color.push("红");
+                left_color.push("r");
             }
-            // 判断右边颜色：0蓝 1红
+            // 判断右边颜色：0b 1r
             if r2_r == 0 {
-                right_color.push("蓝");
+                right_color.push("b");
             } else {
-                right_color.push("红");
+                right_color.push("r");
             }
         }
-        // println!("预测的五个结果是: {left_color:?} 右侧: {right_color:?}");
+        // println!("预测的五个结果是: {left_color:?} r: {right_color:?}");
         // 判断左边颜色
-        if left_color == vec!["蓝", "红", "蓝", "红", "蓝"] {
-            let send_msg = String::from("左侧蓝红蓝红蓝");
+        if left_color == vec!["b", "r", "b", "r", "b"] {
+            let send_msg = String::from("lbrbrb");
             // println!("{}", send_msg);
-            self.wx_pusher.push_summary(&send_msg, String::from(format!("预测结果: {}", send_msg))).await?;
-        } else if left_color == vec!["红", "蓝", "红", "蓝", "红"] {
-            let send_msg = String::from("左侧红蓝红蓝红");
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("盲猜: {}", send_msg))).await?;
+        } else if left_color == vec!["r", "b", "r", "b", "r"] {
+            let send_msg = String::from("lrbrbr");
             // println!("{}", send_msg);
-            self.wx_pusher.push_summary(&send_msg, String::from(format!("预测结果: {}", send_msg))).await?;
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("盲猜: {}", send_msg))).await?;
         } else {
-            // println!("左侧不用关心的结果");
+            // println!("l不用关心的结果");
         }
         // 判断右边颜色
-        if right_color == vec!["蓝", "红", "蓝", "红", "蓝"] {
-            let send_msg = String::from("右侧蓝红蓝红蓝");
+        if right_color == vec!["b", "r", "b", "r", "b"] {
+            let send_msg = String::from("rbrbrb");
             // println!("{}", send_msg);
-            self.wx_pusher.push_summary(&send_msg, String::from(format!("预测结果: {}", send_msg))).await?;
-        } else if right_color == vec!["红", "蓝", "红", "蓝", "红"] {
-            let send_msg = String::from("右侧红蓝红蓝红");
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("盲猜: {}", send_msg))).await?;
+        } else if right_color == vec!["r", "b", "r", "b", "r"] {
+            let send_msg = String::from("rrbrbr");
             // println!("{}", send_msg);
-            self.wx_pusher.push_summary(&send_msg, String::from(format!("预测结果: {}", send_msg))).await?;
+            self.wx_pusher.push_summary(&send_msg, String::from(format!("盲猜: {}", send_msg))).await?;
         } else {
-            // println!("右侧不用关心的结果");
+            // println!("r不用关心的结果");
         }
         Ok(())
     }
